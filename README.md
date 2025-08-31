@@ -65,3 +65,7 @@ To clean up the project by removing all `node_modules` and build artifacts, run 
 ```bash
 npm run clean
 ```
+
+## Documentation
+
+All documentation for this project is located in the `docs` directory. For more details, see the [documentation README](./docs/README.md).
