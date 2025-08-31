@@ -1,0 +1,11 @@
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "uv sync && . .venv/bin/activate && uvicorn app.main:app --reload",
+    "build": "echo 'No build step for backend'",
+    "test": "pytest",
+    "clean": "rm -rf .venv"
+  }
+}
