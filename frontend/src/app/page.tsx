@@ -7,10 +7,10 @@ export default function Home() {
   const [message, setMessage] = useState('');
 
   useEffect(() => {
-    fetch('http://localhost:8000/')
+    fetch('http://localhost:8000/api/hello')
       .then(response => response.json())
       .then(data => {
-        setMessage(data.Hello);
+        setMessage(JSON.stringify(data));
       });
   }, []);
 

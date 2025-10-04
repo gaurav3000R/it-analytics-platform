@@ -1,39 +1,380 @@
-# General
+# =============================================================================
+# IT Analytics Platform - .gitignore
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# General / OS Files
+# -----------------------------------------------------------------------------
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# IDEs
 .idea/
 .vscode/
 *.suo
 *.user
 *.sln
 *.userprefs
-Thumbs.db
+.project
+.classpath
+.settings/
+*.sublime-project
+*.sublime-workspace
+
+# -----------------------------------------------------------------------------
+# Environment Variables
+# -----------------------------------------------------------------------------
 .env
-.env*.local
+.env.local
+.env.*.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# -----------------------------------------------------------------------------
+# Logs
+# -----------------------------------------------------------------------------
+logs/
+*.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+lerna-debug.log*
+pnpm-debug.log*
 
-# Root
-/node_modules
-/.turbo
+# -----------------------------------------------------------------------------
+# Root Level (Monorepo)
+# -----------------------------------------------------------------------------
+/node_modules/
+/.turbo/
 
+# -----------------------------------------------------------------------------
 # Frontend (Next.js)
-/frontend/.next/
+# -----------------------------------------------------------------------------
+# Dependencies
 /frontend/node_modules/
+
+# Next.js build output
+/frontend/.next/
 /frontend/out/
+/frontend/build/
+/frontend/dist/
+
+# Next.js cache
+/frontend/.next/cache/
+
+# Production
+/frontend/build
+
+# Misc
+/frontend/.DS_Store
+/frontend/*.pem
+
+# Debug
+/frontend/npm-debug.log*
+/frontend/yarn-debug.log*
+/frontend/yarn-error.log*
+
+# Local env files
+/frontend/.env
 /frontend/.env.local
+/frontend/.env.development.local
+/frontend/.env.test.local
+/frontend/.env.production.local
 
-# Backend (Python)
+# Vercel
+/frontend/.vercel
+
+# TypeScript
+/frontend/*.tsbuildinfo
+/frontend/next-env.d.ts
+
+# -----------------------------------------------------------------------------
+# Backend (Python/FastAPI)
+# -----------------------------------------------------------------------------
+# Virtual Environments
 /backend/.venv/
-/backend/__pycache__/
-/backend/*.pyc
-/backend/.pytest_cache/
+/backend/venv/
+/backend/env/
+/backend/ENV/
+/backend/env.bak/
+/backend/venv.bak/
 
+# Python cache files
+/backend/__pycache__/
+/backend/**/__pycache__/
+/backend/*.py[cod]
+/backend/**/*.py[cod]
+/backend/*$py.class
+
+# Distribution / packaging
+/backend/.Python
+/backend/build/
+/backend/develop-eggs/
+/backend/dist/
+/backend/downloads/
+/backend/eggs/
+/backend/.eggs/
+/backend/lib/
+/backend/lib64/
+/backend/parts/
+/backend/sdist/
+/backend/var/
+/backend/wheels/
+/backend/share/python-wheels/
+/backend/*.egg-info/
+/backend/.installed.cfg
+/backend/*.egg
+/backend/MANIFEST
+
+# PyInstaller
+/backend/*.manifest
+/backend/*.spec
+
+# Unit test / coverage reports
+/backend/htmlcov/
+/backend/.tox/
+/backend/.nox/
+/backend/.coverage
+/backend/.coverage.*
+/backend/.cache
+/backend/nosetests.xml
+/backend/coverage.xml
+/backend/*.cover
+/backend/*.py,cover
+/backend/.hypothesis/
+/backend/.pytest_cache/
+/backend/cover/
+
+# Translations
+/backend/*.mo
+/backend/*.pot
+
+# Django stuff (if used):
+/backend/*.log
+/backend/local_settings.py
+/backend/db.sqlite3
+/backend/db.sqlite3-journal
+
+# Flask stuff (if used):
+/backend/instance/
+/backend/.webassets-cache
+
+# Scrapy stuff (if used):
+/backend/.scrapy
+
+# Sphinx documentation
+/backend/docs/_build/
+
+# PyBuilder
+/backend/.pybuilder/
+/backend/target/
+
+# Jupyter Notebook
+/backend/.ipynb_checkpoints
+
+# IPython
+/backend/profile_default/
+/backend/ipython_config.py
+
+# pyenv
+/backend/.python-version
+
+# pipenv
+/backend/Pipfile.lock
+
+# PEP 582
+/backend/__pypackages__/
+
+# Celery stuff
+/backend/celerybeat-schedule
+/backend/celerybeat.pid
+
+# SageMath parsed files
+/backend/*.sage.py
+
+# Environments
+/backend/.env
+/backend/.venv
+/backend/env/
+/backend/venv/
+/backend/ENV/
+/backend/env.bak/
+/backend/venv.bak/
+
+# Spyder project settings
+/backend/.spyderproject
+/backend/.spyproject
+
+# Rope project settings
+/backend/.ropeproject
+
+# mkdocs documentation
+/backend/site
+
+# mypy
+/backend/.mypy_cache/
+/backend/.dmypy.json
+/backend/dmypy.json
+
+# Pyre type checker
+/backend/.pyre/
+
+# pytype static type analyzer
+/backend/.pytype/
+
+# Cython debug symbols
+/backend/cython_debug/
+
+# Alembic (database migrations)
+# Note: Keep migration files, ignore only generated stuff
+# /backend/alembic/versions/*.pyc
+
+# -----------------------------------------------------------------------------
+# dbt Project
+# -----------------------------------------------------------------------------
+/dbt_project/target/
+/dbt_project/dbt_packages/
+/dbt_project/logs/
+/dbt_project/.user.yml
+
+# -----------------------------------------------------------------------------
 # Data
+# -----------------------------------------------------------------------------
+# Raw data (keep structure, ignore files)
 /data/raw/*
 !/data/raw/.gitkeep
+
+# Processed data (keep structure, ignore files)
 /data/processed/*
 !/data/processed/.gitkeep
 
+# Large data files
+*.csv
+*.parquet
+*.pkl
+*.pickle
+*.h5
+*.hdf5
+
+# Exceptions: Keep sample or seed data if needed
+# !/data/samples/*.csv
+
+# -----------------------------------------------------------------------------
 # Notebooks
-/notebooks/.ipynb_checkpoints
+# -----------------------------------------------------------------------------
+/notebooks/.ipynb_checkpoints/
+/notebooks/**/.ipynb_checkpoints/
+
+# Jupyter Notebook outputs (optional - uncomment to ignore all notebook outputs)
+# *.ipynb
+
+# -----------------------------------------------------------------------------
+# Infrastructure
+# -----------------------------------------------------------------------------
+# Terraform
+/infra/**/.terraform/
+/infra/**/.terraform.lock.hcl
+/infra/**/terraform.tfstate
+/infra/**/terraform.tfstate.backup
+/infra/**/*.tfvars
+
+# Docker
+/infra/**/docker-compose.override.yml
+
+# -----------------------------------------------------------------------------
+# Machine Learning
+# -----------------------------------------------------------------------------
+# Model files (large files should not be in git)
+*.h5
+*.hdf5
+*.pkl
+*.pickle
+*.joblib
+*.onnx
+*.pt
+*.pth
+
+# Model checkpoints
+/backend/ml/models/
+/backend/ml/checkpoints/
+
+# Exceptions: Keep small example models
+# !/backend/ml/models/example.pkl
+
+# TensorBoard logs
+/backend/runs/
+/backend/tb_logs/
+
+# -----------------------------------------------------------------------------
+# Build & Distribution
+# -----------------------------------------------------------------------------
+build/
+dist/
+*.tar.gz
+*.zip
+
+# -----------------------------------------------------------------------------
+# Testing
+# -----------------------------------------------------------------------------
+.coverage
+htmlcov/
+.pytest_cache/
+.tox/
+
+# -----------------------------------------------------------------------------
+# Documentation
+# -----------------------------------------------------------------------------
+# Keep documentation source, ignore build output
+/docs/_build/
+/docs/.doctrees/
+
+# -----------------------------------------------------------------------------
+# Temporary Files
+# -----------------------------------------------------------------------------
+*.tmp
+*.temp
+*.bak
+*.backup
+*~
+.~*
+
+# -----------------------------------------------------------------------------
+# Package Managers
+# -----------------------------------------------------------------------------
+# npm
+node_modules/
+package-lock.json.bak
+
+# UV (Python)
+uv.lock.bak
+
+# -----------------------------------------------------------------------------
+# Project Specific
+# -----------------------------------------------------------------------------
+# Add any project-specific files here
+
+# Temporary scripts
+scratch.py
+temp.py
+test_local.py
+
+# Local configuration overrides
+*local.config.json
+*local.config.yml
+
+# -----------------------------------------------------------------------------
+# Keep Important Files
+# -----------------------------------------------------------------------------
+# Make sure these are NOT ignored:
+# !.gitkeep
+# !README.md
+# !LICENSE
