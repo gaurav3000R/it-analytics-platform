@@ -1,0 +1,13 @@
+https://github.com/jaklevab/gryzzly
+https://www.gryzzly.io/en/
+https://www.nature.com/articles/s41597-025-04903-2
+2. https://zenodo.org/records/15719919
+https://arxiv.org/pdf/2201.08368
+3. https://github.com/clowee/The-Technical-Debt-Dataset
+https://arxiv.org/pdf/1908.00827
+4. Some Kaggle Datasets for performance metrics dashboards data
+Project Management Risk Raw: ~50 simulated project management data points—good for prototyping EDA and modeling. Kaggle
+Project Management Dataset Example: Structured data around timelines, resource allocation, costs, and status. Kaggle
+Agile Project Dataset 2024: Data on 200 agile development projects with performance metrics. Kaggle
+5. Jira Data Generator
+https://marketplace.atlassian.com/apps/1229705/data-generator-for-jira-cloud

@@ -6,6 +6,9 @@
     "dev": "uv sync && . .venv/bin/activate && uvicorn app.main:app --reload",
     "build": "echo 'No build step for backend'",
     "test": "pytest",
-    "clean": "rm -rf .venv"
+    "clean": "rm -rf .venv",
+    "notebook": "uv sync && uv run jupyter notebook",
+    "lab": "uv sync && uv run jupyter lab",
+    "notebook:exp": "uv sync && uv run jupyter notebook --notebook-dir=experiments"
   }
 }
