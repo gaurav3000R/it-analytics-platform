@@ -1,7 +1,3 @@
-# Updating ./backend/app/handler.py to include new routers
-
-#===== ./backend/app/handler.py =====
-
 from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
@@ -10,8 +6,9 @@ import uvicorn
 
 from app.config import settings
 from app.database import engine, Base
-from app.api import projects, risks, analytics, ai_insights, bug_tracker, resource_utilization, cost_forecasting  # Added new
+from app.api import projects, risks, analytics, ai_insights, bug_tracker, resource_utilization, cost_forecasting
 from app.middleware import MonitoringMiddleware, metrics_endpoint
+from datetime import datetime, timedelta
 
 # Configure logging
 logging.basicConfig(
@@ -60,14 +57,14 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Include routers
+# Include all routers
 app.include_router(projects.router, prefix=settings.API_V1_STR)
 app.include_router(risks.router, prefix=settings.API_V1_STR)
 app.include_router(analytics.router, prefix=settings.API_V1_STR)
 app.include_router(ai_insights.router, prefix=settings.API_V1_STR)
-app.include_router(bug_tracker.router, prefix=settings.API_V1_STR)  # NEW
-app.include_router(resource_utilization.router, prefix=settings.API_V1_STR)  # NEW
-app.include_router(cost_forecasting.router, prefix=settings.API_V1_STR)  # NEW
+app.include_router(bug_tracker.router, prefix=settings.API_V1_STR)
+app.include_router(resource_utilization.router, prefix=settings.API_V1_STR)
+app.include_router(cost_forecasting.router, prefix=settings.API_V1_STR)
 
 # Monitoring endpoints
 app.add_route("/metrics", metrics_endpoint)
@@ -83,7 +80,10 @@ async def root():
             "risk_prediction": True,
             "anomaly_detection": True,
             "csv_data_loading": True,
-            "gemini_ai_insights": bool(settings.GOOGLE_API_KEY)
+            "gemini_ai_insights": bool(settings.GOOGLE_API_KEY),
+            "cost_forecasting": True,
+            "resource_utilization": True,
+            "bug_tracking": True
         }
     }
 
@@ -104,7 +104,7 @@ async def health_check():
     
     return {
         "status": "healthy",
-        "timestamp": "2024-01-01T00:00:00Z",
+        "timestamp": datetime.now().isoformat(),
         "system_metrics": get_system_metrics(),
         "integrations": {
             "gemini_ai": gemini_status,

@@ -1,5 +1,5 @@
 """
-Main entry point for the IT Analytics Platform with CSV loading and AI insights
+Enhanced main entry point with comprehensive setup
 """
 import sys
 import os
@@ -7,17 +7,25 @@ import argparse
 import asyncio
 from pathlib import Path
 
-# Add the backend directory (parent of app) to Python path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from app.handler import app
-from app.database import SessionLocal
+from app.database import SessionLocal, engine, Base
 from app.services.data_processor import DataProcessorService
-from app.services.csv_loader import CSVLoaderService  # NEW
+from app.services.csv_loader import CSVLoaderService
 from app.services.risk_prediction import RiskPredictionService
 from app.services.anomaly_detection import AnomalyDetectionService
-from app.services.gemini_service import GeminiAnalyticsService  # NEW
+from app.services.gemini_service import GeminiAnalyticsService
+from app.models.project import Project
+from app.models.employee import Employee
+from app.models.risk import RiskScore
 import uvicorn
+
+def setup_database():
+    """Initialize database with all tables"""
+    print("Setting up database...")
+    Base.metadata.create_all(bind=engine)
+    print("✅ Database tables created")
 
 def load_csv_data(csv_file_path: str = None, clear_existing: bool = False):
     """Load CSV data into database"""
@@ -35,7 +43,7 @@ def load_csv_data(csv_file_path: str = None, clear_existing: bool = False):
         
         if result['errors']:
             print(f"⚠️  Errors encountered: {len(result['errors'])}")
-            for error in result['errors'][:3]:  # Show first 3 errors
+            for error in result['errors'][:3]:
                 print(f"   - {error}")
                 
     except Exception as e:
@@ -43,51 +51,60 @@ def load_csv_data(csv_file_path: str = None, clear_existing: bool = False):
     finally:
         db.close()
 
-def setup_sample_data():
-    """Setup sample data for development/demo"""
-    print("Setting up sample data...")
+def train_risk_models():
+    """Train ML models for risk prediction"""
+    print("Training risk prediction models...")
     
     db = SessionLocal()
     try:
-        data_processor = DataProcessorService()
-        data_processor.generate_sample_data(db, num_projects=10, num_employees=20)
-        print("✅ Sample data created successfully")
+        risk_service = RiskPredictionService()
+        metrics = risk_service.train_model(db)
+        
+        print(f"✅ Risk prediction model trained")
+        print(f"   - Test R² Score: {metrics['test_r2']:.3f}")
+        print(f"   - Test RMSE: {metrics['test_rmse']:.2f}")
+        
+        # Save model
+        os.makedirs("models", exist_ok=True)
+        risk_service.save_model("models/risk_prediction_model.pkl")
+        print("✅ Model saved to models/risk_prediction_model.pkl")
+        
+    except Exception as e:
+        print(f"❌ Error training models: {e}")
     finally:
         db.close()
 
-def train_models():
-    """Train ML models"""
-    print("Training ML models...")
+def detect_anomalies():
+    """Run anomaly detection on recent data"""
+    print("Running anomaly detection...")
     
     db = SessionLocal()
     try:
-        # Train risk prediction model
-        risk_service = RiskPredictionService()
-        metrics = risk_service.train_model(db)
-        print(f"✅ Risk prediction model trained - R2: {metrics['test_r2']:.3f}")
-        
-        # Save model
-        risk_service.save_model("models/risk_prediction_model.pkl")
-        print("✅ Risk prediction model saved")
-        
-        # Run anomaly detection
         anomaly_service = AnomalyDetectionService()
         anomalies = anomaly_service.detect_daily_log_anomalies(db, days_back=30)
-        print(f"✅ Anomaly detection completed - Found {len(anomalies)} anomalies")
         
+        print(f"✅ Anomaly detection completed")
+        print(f"   - Anomalies detected: {len(anomalies)}")
+        
+        # Show top anomalies
+        for i, anomaly in enumerate(anomalies[:3]):
+            print(f"   {i+1}. {anomaly['description']}")
+            
+    except Exception as e:
+        print(f"❌ Error detecting anomalies: {e}")
     finally:
         db.close()
 
 async def generate_ai_insights(project_id: str = None):
-    """Generate AI insights for projects"""
+    """Generate AI insights using Gemini"""
     print("Generating AI insights...")
     
     db = SessionLocal()
     try:
         gemini_service = GeminiAnalyticsService()
         
-        if project_id:
-            # Generate insights for specific project
+        if project_id and project_id.lower() != 'portfolio':
+            # Project-specific insights
             print(f"Generating insights for project {project_id}...")
             
             risk_analysis = await gemini_service.generate_project_risk_analysis(db, project_id)
@@ -97,7 +114,7 @@ async def generate_ai_insights(project_id: str = None):
             print(f"✅ Recommendations generated for {project_id}")
             
         else:
-            # Generate portfolio-level insights
+            # Portfolio-level insights
             print("Generating portfolio insights...")
             
             portfolio_trends = await gemini_service.analyze_portfolio_trends(db)
@@ -108,86 +125,95 @@ async def generate_ai_insights(project_id: str = None):
             
     except Exception as e:
         print(f"❌ Error generating AI insights: {e}")
-        print("Make sure GOOGLE_API_KEY is set in your environment")
+        print("💡 Make sure GOOGLE_API_KEY is set in your environment")
     finally:
         db.close()
 
-def show_csv_summary():
-    """Show summary of CSV data"""
-    print("CSV Data Summary")
-    print("=" * 50)
+def show_system_status():
+    """Show system status and configuration"""
+    print("\n" + "="*50)
+    print("IT Analytics Platform - System Status")
+    print("="*50)
     
+    # Check database
     try:
-        csv_loader = CSVLoaderService()
-        df = csv_loader.load_csv_data()
-        summary = csv_loader.get_data_summary(df)
+        db = SessionLocal()
+        project_count = db.query(Project).count()
+        employee_count = db.query(Employee).count()
+        risk_score_count = db.query(RiskScore).count()
+        db.close()
         
-        print(f"Total Records: {summary['total_records']}")
-        print(f"Columns: {len(summary['columns'])}")
-        print("\nRisk Level Distribution:")
-        for risk_level, count in summary['risk_level_distribution'].items():
-            print(f"  {risk_level}: {count}")
-        
-        print("\nProject Type Distribution:")
-        for project_type, count in list(summary['project_type_distribution'].items())[:5]:
-            print(f"  {project_type}: {count}")
-            
-        print(f"\nColumns with missing values:")
-        missing_values = {k: v for k, v in summary['missing_values'].items() if v > 0}
-        if missing_values:
-            for col, count in list(missing_values.items())[:5]:
-                print(f"  {col}: {count}")
-        else:
-            print("  None")
-        
+        print(f"📊 Database Status: CONNECTED")
+        print(f"   - Projects: {project_count}")
+        print(f"   - Employees: {employee_count}") 
+        print(f"   - Risk Scores: {risk_score_count}")
     except Exception as e:
-        print(f"❌ Error loading CSV: {e}")
+        print(f"📊 Database Status: ERROR - {e}")
+    
+    # Check Gemini AI
+    from app.config import settings
+    if settings.GOOGLE_API_KEY:
+        print("🤖 Gemini AI: CONFIGURED")
+    else:
+        print("🤖 Gemini AI: NOT CONFIGURED (set GOOGLE_API_KEY)")
+    
+    # Check models
+    if os.path.exists("models/risk_prediction_model.pkl"):
+        print("🧠 ML Models: TRAINED")
+    else:
+        print("🧠 ML Models: NOT TRAINED (run --train-models)")
+    
+    print("="*50)
 
 def main():
     parser = argparse.ArgumentParser(description="IT Analytics Platform CLI")
-    parser.add_argument("--load-csv", nargs='?', default=None, help="Load CSV file (default: app/data/project_risk_dataset.csv)")  # FIXED
-    parser.add_argument("--clear-existing", action="store_true", help="Clear existing projects before loading CSV")
-    parser.add_argument("--csv-summary", action="store_true", help="Show CSV data summary")
-    parser.add_argument("--setup-data", action="store_true", help="Setup sample data (legacy)")
+    parser.add_argument("--setup-db", action="store_true", help="Setup database tables")
+    parser.add_argument("--load-csv", nargs='?', const="default", help="Load CSV file")
+    parser.add_argument("--clear-existing", action="store_true", help="Clear existing data before loading CSV")
     parser.add_argument("--train-models", action="store_true", help="Train ML models")
-    parser.add_argument("--ai-insights", help="Generate AI insights (provide project_id or 'portfolio')")
-    parser.add_argument("--run-server", action="store_true", help="Run the server")
+    parser.add_argument("--detect-anomalies", action="store_true", help="Run anomaly detection")
+    parser.add_argument("--ai-insights", help="Generate AI insights (project_id or 'portfolio')")
+    parser.add_argument("--status", action="store_true", help="Show system status")
+    parser.add_argument("--run-server", action="store_true", help="Run the web server")
     parser.add_argument("--port", type=int, default=8000, help="Port to run server on")
     parser.add_argument("--host", default="0.0.0.0", help="Host to run server on")
     
     args = parser.parse_args()
     
-    # Create models directory if it doesn't exist
+    # Create necessary directories
     os.makedirs("models", exist_ok=True)
     os.makedirs("app/data", exist_ok=True)
     
-    # CSV operations
-    if args.csv_summary:
-        show_csv_summary()
-        return
+    # Execute commands
+    if args.setup_db:
+        setup_database()
     
-    if args.load_csv is not None or args.clear_existing:  # FIXED: Trigger on flag or clear
-        csv_file = args.load_csv if args.load_csv else None  # Use default if None
+    if args.load_csv is not None:
+        csv_file = None if args.load_csv == "default" else args.load_csv
         load_csv_data(csv_file, args.clear_existing)
     
-    # Legacy sample data
-    if args.setup_data:
-        setup_sample_data()
-    
-    # ML training
     if args.train_models:
-        train_models()
+        train_risk_models()
     
-    # AI insights generation
+    if args.detect_anomalies:
+        detect_anomalies()
+    
     if args.ai_insights:
         project_id = None if args.ai_insights.lower() == 'portfolio' else args.ai_insights
         asyncio.run(generate_ai_insights(project_id))
     
-    # Run server
-    if args.run_server or (not any([args.load_csv is not None, args.csv_summary, args.setup_data, 
-                                   args.train_models, args.ai_insights])):
-        print(f"Starting server on {args.host}:{args.port}...")
-        print(f"API Documentation: http://{args.host}:{args.port}/docs")
+    if args.status:
+        show_system_status()
+    
+    # Run server (default if no other commands)
+    if args.run_server or not any(vars(args).values()):
+        print(f"\n🚀 Starting IT Analytics Platform Server...")
+        print(f"   📍 Host: {args.host}")
+        print(f"   🔌 Port: {args.port}")
+        print(f"   📚 API Docs: http://{args.host}:{args.port}/docs")
+        print(f"   🩺 Health: http://{args.host}:{args.port}/health")
+        print("\nPress Ctrl+C to stop the server")
+        
         uvicorn.run(
             "app.handler:app",
             host=args.host,

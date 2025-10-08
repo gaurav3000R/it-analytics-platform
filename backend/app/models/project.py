@@ -1,6 +1,3 @@
-# Resolving bug: Adding missing fields to Project model for compatibility with data_processor and dashboard
-# Update ./app/models/project.py - Add name, client, start_date, end_date, current_spend, status
-
 #===== ./app/models/project.py =====
 
 from sqlalchemy import Column, Integer, String, Float, DateTime, JSON, ForeignKey, Boolean, Text
@@ -11,30 +8,30 @@ from app.database import Base
 class Project(Base):
     __tablename__ = "projects"
     
-    # Original fields
     id = Column(Integer, primary_key=True, index=True)
     
-    # Added for sample data and dashboard compatibility
-    name = Column(String, index=True)  # NEW
-    client = Column(String)  # NEW
-    start_date = Column(DateTime)  # NEW
-    end_date = Column(DateTime)  # NEW
-    current_spend = Column(Float, default=0.0)  # NEW
-    status = Column(String, default="active")  # NEW
+    # Core project fields for dashboard compatibility
+    name = Column(String, index=True)
+    client = Column(String)
+    start_date = Column(DateTime)
+    end_date = Column(DateTime)
+    current_spend = Column(Float, default=0.0)
+    status = Column(String, default="active")
+    budget = Column(Float)  # For dashboard compatibility
     
-    # CSV Dataset Fields - Project Demographics
-    project_id = Column(String, unique=True, index=True)  # From CSV Project_ID
-    project_type = Column(String, index=True)  # From CSV Project_Type
-    team_size = Column(Integer)  # From CSV Team_Size
-    project_budget_usd = Column(Float)  # From CSV Project_Budget_USD
-    estimated_timeline_months = Column(Float)  # From CSV Estimated_Timeline_Months
-    complexity_score = Column(Float)  # From CSV Complexity_Score
-    stakeholder_count = Column(Integer)  # From CSV Stakeholder_Count
-    methodology_used = Column(String)  # From CSV Methodology_Used
-    team_experience_level = Column(String)  # From CSV Team_Experience_Level
-    past_similar_projects = Column(Integer)  # From CSV Past_Similar_Projects
+    # CSV Dataset Fields
+    project_id = Column(String, unique=True, index=True)
+    project_type = Column(String, index=True)
+    team_size = Column(Integer)
+    project_budget_usd = Column(Float)
+    estimated_timeline_months = Column(Float)
+    complexity_score = Column(Float)
+    stakeholder_count = Column(Integer)
+    methodology_used = Column(String)
+    team_experience_level = Column(String)
+    past_similar_projects = Column(Integer)
     
-    # Operational Metrics
+    # Operational Metrics (from CSV)
     external_dependencies_count = Column(Integer)
     change_request_frequency = Column(String)
     project_phase = Column(String)
@@ -87,18 +84,18 @@ class Project(Base):
     seasonal_risk_factor = Column(Float)
     
     # Target Variable
-    risk_level = Column(String, index=True)  # From CSV Risk_Level
+    risk_level = Column(String, index=True)
     
     # System fields
     created_at = Column(DateTime, default=func.now())
     updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
     
     # AI-generated insights
-    ai_risk_analysis = Column(Text)  # Gemini-generated risk analysis
-    ai_recommendations = Column(Text)  # Gemini-generated recommendations
+    ai_risk_analysis = Column(Text)
+    ai_recommendations = Column(Text)
     ai_insights_updated_at = Column(DateTime)
     
-    # Relationships (keep existing ones)
+    # Relationships
     daily_logs = relationship("DailyLog", back_populates="project")
     risk_scores = relationship("RiskScore", back_populates="project")
-    sprints = relationship("Sprint", back_populates="project")  # NEW
+    sprints = relationship("Sprint", back_populates="project")
