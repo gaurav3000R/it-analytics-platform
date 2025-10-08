@@ -3,16 +3,23 @@
   "private": true,
   "packageManager": "npm@8.0.0",
   "scripts": {
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\" --names \"BACKEND,FRONTEND\" --prefix-colors \"blue,green\"",
+    "dev:backend": "cd backend && python -m uvicorn app.handler:app --reload --port 8000",
+    "dev:frontend": "cd frontend && npm run dev",
     "build": "turbo build",
-    "dev": "turbo dev",
     "test": "turbo test",
-    "clean": "turbo clean"
+    "clean": "turbo clean",
+    "setup": "npm run setup:deps && npm run setup:backend && npm run setup:frontend && npm run setup:data",
+    "setup:deps": "npm install",
+    "setup:backend": "cd backend && python3 -m venv .venv && .venv/bin/pip install -r requirements.txt",
+    "setup:frontend": "cd frontend && npm install",
+    "setup:data": "cd backend && .venv/bin/python app/main.py --setup-data && .venv/bin/python app/main.py --train-models"
   },
   "devDependencies": {
+    "concurrently": "^8.2.2",
     "turbo": "latest"
   },
   "workspaces": [
-    "frontend",
-    "backend"
+    "frontend"
   ]
 }
