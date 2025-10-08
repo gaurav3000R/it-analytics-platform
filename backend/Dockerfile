@@ -1,31 +1,32 @@
-# Stage 1: Build the virtual environment
-FROM python:3.11-slim as builder
-
-# Install uv
-RUN pip install uv
-
-# Create and activate a virtual environment
-WORKDIR /app
-COPY pyproject.toml uv.lock* ./
-RUN uv venv
-RUN uv sync --system
-
-# Stage 2: Run the application
 FROM python:3.11-slim
 
 # Set working directory
 WORKDIR /app
 
-# Copy the virtual environment from the builder stage
-COPY --from=builder /app/.venv /.venv
-# Copy the application code
-COPY ./app /app
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    gcc \
+    g++ \
+    && rm -rf /var/lib/apt/lists/*
 
-# Activate the virtual environment
-ENV PATH="/app/.venv/bin:$PATH"
+# Copy requirements first for better caching
+COPY requirements.txt .
 
-# Expose the port
+# Install Python dependencies
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy application code
+COPY . .
+
+# Create models directory
+RUN mkdir -p models
+
+# Expose port
 EXPOSE 8000
 
+# Health check
+HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
+    CMD python -c "import requests; requests.get('http://localhost:8000/health')"
+
 # Run the application
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["python", "app/main.py", "--run-server"]

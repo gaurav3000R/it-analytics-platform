@@ -378,3 +378,6 @@ test_local.py
 # !.gitkeep
 # !README.md
 # !LICENSE
+
+*.db
+

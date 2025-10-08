@@ -1,29 +1,39 @@
+# Adding the missing volumes in docker-compose.yml
+
+#===== ./backend/docker-compose.yml =====
+
 version: '3.8'
 
 services:
   backend:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    build: .
     ports:
       - "8000:8000"
-    volumes:
-      - ./app:/app/app
-    depends_on:
-      - postgres
     environment:
-      - DATABASE_URL=postgresql://user:password@postgres/db
-
-  postgres:
-    image: postgres:15-alpine
+      - DATABASE_URL=postgresql://postgres:password@db:5432/it_analytics
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      - db
+      - redis
+    volumes:
+      - ./models:/app/models
+      - ./app/data:/app/app/data
+  
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: it_analytics
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
     ports:
       - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data/
-    environment:
-      - POSTGRES_USER=user
-      - POSTGRES_PASSWORD=password
-      - POSTGRES_DB=db
+  
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
 
 volumes:
   postgres_data:
