@@ -29,23 +29,24 @@ export default function RootLayout({
             position="top-right"
             toastOptions={{
               duration: 4000,
+              className: 'glass',
               style: {
-                background: 'rgba(30, 41, 59, 0.95)',
-                color: '#fff',
+                background: 'hsl(var(--color-card))',
+                color: 'hsl(var(--color-foreground))',
                 backdropFilter: 'blur(10px)',
-                border: '1px rgba(168, 85, 247, 0.3)',
+                border: '1px solid hsl(var(--color-border))',
                 borderRadius: '12px',
               },
               success: {
                 iconTheme: {
-                  primary: '#10b981',
-                  secondary: '#fff',
+                  primary: 'hsl(var(--color-success))',
+                  secondary: 'hsl(var(--color-primary-foreground))',
                 },
               },
               error: {
                 iconTheme: {
-                  primary: '#ef4444',
-                  secondary: '#fff',
+                  primary: 'hsl(var(--color-destructive))',
+                  secondary: 'hsl(var(--color-primary-foreground))',
                 },
               },
             }}

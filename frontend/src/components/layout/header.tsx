@@ -1,13 +1,12 @@
 'use client'
 
 import React from 'react'
-import { Bell, Search, Moon, Sun, RefreshCw } from 'lucide-react'
-import { useThemeStore } from '@/store'
+import { Bell, Search, RefreshCw } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { QuickThemeSwitcher } from '@/components/ui/QuickThemeSwitcher'
 
 export function Header() {
-  const { theme, toggleTheme } = useThemeStore()
   const [searchQuery, setSearchQuery] = React.useState('')
 
   return (
@@ -38,17 +37,7 @@ export function Header() {
             <RefreshCw className="h-5 w-5" />
           </Button>
 
-          <button
-            onClick={toggleTheme}
-            className="relative p-2 rounded-lg hover:bg-white/10 transition-colors"
-            title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
-          >
-            {theme === 'dark' ? (
-              <Sun className="h-5 w-5" />
-            ) : (
-              <Moon className="h-5 w-5" />
-            )}
-          </button>
+          <QuickThemeSwitcher />
 
           <button className="relative p-2 rounded-lg hover:bg-white/10 transition-colors">
             <Bell className="h-5 w-5" />

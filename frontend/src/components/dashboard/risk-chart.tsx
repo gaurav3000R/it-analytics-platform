@@ -27,30 +27,29 @@ export function RiskChart({ data }: RiskChartProps) {
             <AreaChart data={chartData}>
               <defs>
                 <linearGradient id="colorRisk" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#a855f7" stopOpacity={0.8} />
-                  <stop offset="95%" stopColor="#a855f7" stopOpacity={0} />
+                  <stop offset="5%" stopColor="hsl(var(--color-primary))" stopOpacity={0.8} />
+                  <stop offset="95%" stopColor="hsl(var(--color-primary))" stopOpacity={0} />
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" />
+              <CartesianGrid strokeDasharray="3 3" className="stroke-white/10" />
               <XAxis
                 dataKey="name"
-                stroke="#9ca3af"
+                className="stroke-gray-400"
                 fontSize={12}
                 tickLine={false}
               />
-              <YAxis stroke="#9ca3af" fontSize={12} tickLine={false} />
+              <YAxis className="stroke-gray-400" fontSize={12} tickLine={false} />
               <Tooltip
                 contentStyle={{
-                  backgroundColor: 'rgba(30, 41, 59, 0.95)',
-                  border: '1px solid rgba(168, 85, 247, 0.3)',
+                  backgroundColor: 'hsl(var(--color-card))',
+                  border: '1px solid hsl(var(--color-border))',
                   borderRadius: '8px',
-                  color: '#fff',
                 }}
               />
               <Area
                 type="monotone"
                 dataKey="risk"
-                stroke="#a855f7"
+                className="stroke-primary"
                 strokeWidth={2}
                 fillOpacity={1}
                 fill="url(#colorRisk)"

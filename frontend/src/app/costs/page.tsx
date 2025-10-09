@@ -62,14 +62,14 @@ export default function CostsPage() {
           <CardContent>
             <ResponsiveContainer width="100%" height={350}>
               <LineChart data={forecastData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" />
-                <XAxis dataKey="month" stroke="#9ca3af" />
-                <YAxis stroke="#9ca3af" />
-                <Tooltip contentStyle={{ backgroundColor: 'rgba(30, 41, 59, 0.95)', border: '1px solid rgba(168, 85, 247, 0.3)', borderRadius: '8px' }} />
+                <CartesianGrid strokeDasharray="3 3" className="stroke-white/10" />
+                <XAxis dataKey="month" className="stroke-gray-400" />
+                <YAxis className="stroke-gray-400" />
+                <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--color-card))', border: '1px solid hsl(var(--color-border))', borderRadius: '8px' }} />
                 <Legend />
-                <Line type="monotone" dataKey="budget" stroke="#3b82f6" strokeWidth={2} name="Budget" />
-                <Line type="monotone" dataKey="actual" stroke="#10b981" strokeWidth={2} name="Actual" />
-                <Line type="monotone" dataKey="forecast" stroke="#a855f7" strokeWidth={2} strokeDasharray="5 5" name="Forecast" />
+                <Line type="monotone" dataKey="budget" className="stroke-blue-500" strokeWidth={2} name="Budget" />
+                <Line type="monotone" dataKey="actual" className="stroke-success" strokeWidth={2} name="Actual" />
+                <Line type="monotone" dataKey="forecast" className="stroke-primary" strokeWidth={2} strokeDasharray="5 5" name="Forecast" />
               </LineChart>
             </ResponsiveContainer>
           </CardContent>

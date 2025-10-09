@@ -10,9 +10,9 @@ import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recha
 
 export default function ResourcesPage() {
   const utilizationData = [
-    { name: 'Optimal', value: 65, color: '#10b981' },
-    { name: 'Over-utilized', value: 20, color: '#ef4444' },
-    { name: 'Under-utilized', value: 15, color: '#f59e0b' },
+    { name: 'Optimal', value: 65, fill: 'hsl(var(--color-success))' },
+    { name: 'Over-utilized', value: 20, fill: 'hsl(var(--color-destructive))' },
+    { name: 'Under-utilized', value: 15, fill: 'hsl(var(--color-warning))' },
   ]
 
   return (
@@ -58,10 +58,10 @@ export default function ResourcesPage() {
                 <PieChart>
                   <Pie data={utilizationData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} label>
                     {utilizationData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
+                      <Cell key={`cell-${index}`} fill={entry.fill} />
                     ))}
                   </Pie>
-                  <Tooltip contentStyle={{ backgroundColor: 'rgba(30, 41, 59, 0.95)', border: '1px solid rgba(168, 85, 247, 0.3)', borderRadius: '8px' }} />
+                  <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--color-card))', border: '1px solid hsl(var(--color-border))', borderRadius: '8px' }} />
                   <Legend />
                 </PieChart>
               </ResponsiveContainer>

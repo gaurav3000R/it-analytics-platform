@@ -38,5 +38,6 @@ class Settings(BaseSettings):
     class Config:
         case_sensitive = True
         env_file = ".env"
+        extra = "ignore"  # Ignore extra fields from .env (like NEXT_PUBLIC_* variables)
 
 settings = Settings()

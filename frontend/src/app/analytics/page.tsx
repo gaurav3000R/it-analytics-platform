@@ -18,9 +18,9 @@ export default function AnalyticsPage() {
   })
 
   const riskData = [
-    { name: 'High', value: overview?.high_risk_projects || 0, color: '#ef4444' },
-    { name: 'Medium', value: overview?.medium_risk_projects || 0, color: '#f59e0b' },
-    { name: 'Low', value: overview?.low_risk_projects || 0, color: '#10b981' },
+    { name: 'High', value: overview?.high_risk_projects || 0, fill: 'hsl(var(--color-destructive))' },
+    { name: 'Medium', value: overview?.medium_risk_projects || 0, fill: 'hsl(var(--color-warning))' },
+    { name: 'Low', value: overview?.low_risk_projects || 0, fill: 'hsl(var(--color-success))' },
   ]
 
   const monthlyTrend = [
@@ -88,15 +88,15 @@ export default function AnalyticsPage() {
                 <AreaChart data={monthlyTrend}>
                   <defs>
                     <linearGradient id="colorProjects" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#a855f7" stopOpacity={0.8}/>
-                      <stop offset="95%" stopColor="#a855f7" stopOpacity={0}/>
+                      <stop offset="5%" stopColor="hsl(var(--color-primary))" stopOpacity={0.8}/>
+                      <stop offset="95%" stopColor="hsl(var(--color-primary))" stopOpacity={0}/>
                     </linearGradient>
                   </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" />
-                  <XAxis dataKey="month" stroke="#9ca3af" fontSize={12} />
-                  <YAxis stroke="#9ca3af" fontSize={12} />
-                  <Tooltip contentStyle={{ backgroundColor: 'rgba(30, 41, 59, 0.95)', border: '1px solid rgba(168, 85, 247, 0.3)', borderRadius: '8px' }} />
-                  <Area type="monotone" dataKey="projects" stroke="#a855f7" fillOpacity={1} fill="url(#colorProjects)" />
+                  <CartesianGrid strokeDasharray="3 3" className="stroke-white/10" />
+                  <XAxis dataKey="month" className="stroke-gray-400" fontSize={12} />
+                  <YAxis className="stroke-gray-400" fontSize={12} />
+                  <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--color-card))', border: '1px solid hsl(var(--color-border))', borderRadius: '8px' }} />
+                  <Area type="monotone" dataKey="projects" className="stroke-primary" fillOpacity={1} fill="url(#colorProjects)" />
                 </AreaChart>
               </ResponsiveContainer>
             </CardContent>
@@ -109,10 +109,10 @@ export default function AnalyticsPage() {
                 <RePieChart>
                   <Pie data={riskData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={90} label>
                     {riskData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
+                      <Cell key={`cell-${index}`} fill={entry.fill} />
                     ))}
                   </Pie>
-                  <Tooltip contentStyle={{ backgroundColor: 'rgba(30, 41, 59, 0.95)', border: '1px solid rgba(168, 85, 247, 0.3)', borderRadius: '8px' }} />
+                  <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--color-card))', border: '1px solid hsl(var(--color-border))', borderRadius: '8px' }} />
                   <Legend />
                 </RePieChart>
               </ResponsiveContainer>
@@ -125,13 +125,13 @@ export default function AnalyticsPage() {
           <CardContent>
             <ResponsiveContainer width="100%" height={350}>
               <BarChart data={monthlyTrend}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" />
-                <XAxis dataKey="month" stroke="#9ca3af" />
-                <YAxis stroke="#9ca3af" />
-                <Tooltip contentStyle={{ backgroundColor: 'rgba(30, 41, 59, 0.95)', border: '1px solid rgba(168, 85, 247, 0.3)', borderRadius: '8px' }} />
+                <CartesianGrid strokeDasharray="3 3" className="stroke-white/10" />
+                <XAxis dataKey="month" className="stroke-gray-400" />
+                <YAxis className="stroke-gray-400" />
+                <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--color-card))', border: '1px solid hsl(var(--color-border))', borderRadius: '8px' }} />
                 <Legend />
-                <Bar dataKey="projects" fill="#a855f7" name="Projects" radius={[8, 8, 0, 0]} />
-                <Bar dataKey="risks" fill="#ef4444" name="High Risk" radius={[8, 8, 0, 0]} />
+                <Bar dataKey="projects" className="fill-primary" name="Projects" radius={[8, 8, 0, 0]} />
+                <Bar dataKey="risks" className="fill-destructive" name="High Risk" radius={[8, 8, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>

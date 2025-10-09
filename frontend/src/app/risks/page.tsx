@@ -53,9 +53,9 @@ export default function RisksPage() {
   }
 
   const riskDistribution = [
-    { name: 'Low Risk', value: riskDashboard?.low_risk_count || 0, color: '#10b981' },
-    { name: 'Medium Risk', value: riskDashboard?.medium_risk_count || 0, color: '#f59e0b' },
-    { name: 'High Risk', value: riskDashboard?.high_risk_count || 0, color: '#ef4444' },
+    { name: 'Low Risk', value: riskDashboard?.low_risk_count || 0, fill: 'hsl(var(--color-success))' },
+    { name: 'Medium Risk', value: riskDashboard?.medium_risk_count || 0, fill: 'hsl(var(--color-warning))' },
+    { name: 'High Risk', value: riskDashboard?.high_risk_count || 0, fill: 'hsl(var(--color-destructive))' },
   ]
 
   return (
@@ -143,18 +143,17 @@ export default function RisksPage() {
             <CardContent>
               <ResponsiveContainer width="100%" height={300}>
                 <BarChart data={riskDistribution}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" />
-                  <XAxis dataKey="name" stroke="#9ca3af" fontSize={12} />
-                  <YAxis stroke="#9ca3af" fontSize={12} />
+                  <CartesianGrid strokeDasharray="3 3" className="stroke-white/10" />
+                  <XAxis dataKey="name" className="stroke-gray-400" fontSize={12} />
+                  <YAxis className="stroke-gray-400" fontSize={12} />
                   <Tooltip
                     contentStyle={{
-                      backgroundColor: 'rgba(30, 41, 59, 0.95)',
-                      border: '1px solid rgba(168, 85, 247, 0.3)',
+                      backgroundColor: 'hsl(var(--color-card))',
+                      border: '1px solid hsl(var(--color-border))',
                       borderRadius: '8px',
-                      color: '#fff',
                     }}
                   />
-                  <Bar dataKey="value" fill="#a855f7" radius={[8, 8, 0, 0]} />
+                  <Bar dataKey="value" className="fill-primary" radius={[8, 8, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </CardContent>
