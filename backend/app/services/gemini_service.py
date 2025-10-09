@@ -18,9 +18,18 @@ logger = logging.getLogger(__name__)
 class GeminiAnalyticsService:
     def __init__(self):
         self.gemini_client = get_gemini_client()
+        self.is_enabled = self.gemini_client is not None
+        if not self.is_enabled:
+            logger.warning("GeminiAnalyticsService initialized without API key. AI features will be disabled.")
+        
+    def _check_enabled(self):
+        """Check if Gemini service is enabled"""
+        if not self.is_enabled:
+            raise ValueError("Gemini AI features are disabled. Please set GOOGLE_API_KEY environment variable.")
         
     async def generate_project_risk_analysis(self, db: Session, project_id: str) -> Dict[str, Any]:
         """Generate AI-powered risk analysis for a specific project"""
+        self._check_enabled()
         
         project = db.query(Project).filter(Project.project_id == project_id).first()
         if not project:
@@ -61,6 +70,7 @@ class GeminiAnalyticsService:
     
     async def generate_recommendations(self, db: Session, project_id: str) -> Dict[str, Any]:
         """Generate AI-powered recommendations for project improvement"""
+        self._check_enabled()
         
         project = db.query(Project).filter(Project.project_id == project_id).first()
         if not project:
@@ -112,6 +122,7 @@ class GeminiAnalyticsService:
     
     async def analyze_portfolio_trends(self, db: Session) -> Dict[str, Any]:
         """Analyze trends across all projects in the portfolio"""
+        self._check_enabled()
         
         projects = db.query(Project).filter(Project.risk_level.isnot(None)).all()
         
@@ -150,6 +161,7 @@ class GeminiAnalyticsService:
     
     async def generate_executive_summary(self, db: Session) -> Dict[str, Any]:
         """Generate executive summary of overall project health"""
+        self._check_enabled()
         
         projects = db.query(Project).all()
         

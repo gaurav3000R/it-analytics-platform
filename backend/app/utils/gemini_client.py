@@ -15,7 +15,8 @@ logger = logging.getLogger(__name__)
 def get_gemini_client():
     """Initialize and return Gemini client"""
     if not settings.GOOGLE_API_KEY:
-        raise ValueError("GOOGLE_API_KEY not set in environment")
+        logger.warning("GOOGLE_API_KEY not set in environment. Gemini features will be disabled.")
+        return None
     
     genai.configure(api_key=settings.GOOGLE_API_KEY)
     return GeminiClient()
