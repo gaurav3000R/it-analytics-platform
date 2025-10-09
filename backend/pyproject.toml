@@ -1,7 +1,7 @@
 [project]
 name = "backend"
 version = "0.1.0"
-description = "Add your description here"
+description = "AI-powered Operational Risk Early Warning System for IT Services"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
@@ -15,4 +15,22 @@ dependencies = [
     "pytest>=8.4.1",
     "scikit-learn>=1.7.1",
     "sqlmodel>=0.0.24",
+    "pandas>=2.2.0",
+    "numpy>=1.26.0",
+    "xgboost>=2.0.0",
+    "lightgbm>=4.1.0",
+    "prophet>=1.1.5",
+    "plotly>=5.18.0",
+    "seaborn>=0.13.0",
+    "matplotlib>=3.8.0",
+    "supabase>=2.3.0",
+    "python-dotenv>=1.0.0",
+    "python-jose[cryptography]>=3.3.0",
+    "passlib[bcrypt]>=1.7.4",
+    "python-multipart>=0.0.6",
+    "jira>=3.5.0",
+    "imbalanced-learn>=0.12.0",
+    "statsmodels>=0.14.0",
+    "kaggle>=1.6.0",
+    "opendatasets>=0.1.22",
 ]
