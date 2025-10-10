@@ -1,5 +1,5 @@
 """
-Enhanced main entry point with comprehensive setup
+Enhanced main entry point with comprehensive setup for Supabase
 """
 import sys
 import os
@@ -10,28 +10,28 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from app.handler import app
-from app.database import SessionLocal, engine, Base
+from app.database import get_db, init_db
 from app.services.data_processor import DataProcessorService
 from app.services.csv_loader import CSVLoaderService
 from app.services.risk_prediction import RiskPredictionService
 from app.services.anomaly_detection import AnomalyDetectionService
 from app.services.gemini_service import GeminiAnalyticsService
-from app.models.project import Project
-from app.models.employee import Employee
-from app.models.risk import RiskScore
 import uvicorn
 
 def setup_database():
     """Initialize database with all tables"""
-    print("Setting up database...")
-    Base.metadata.create_all(bind=engine)
-    print("✅ Database tables created")
+    print("Setting up Supabase database...")
+    try:
+        init_db()
+        print("✅ Database tables created")
+    except Exception as e:
+        print(f"❌ Error setting up database: {e}")
 
 def load_csv_data(csv_file_path: str = None, clear_existing: bool = False):
     """Load CSV data into database"""
     print("Loading CSV data...")
     
-    db = SessionLocal()
+    db = get_db()
     try:
         csv_loader = CSVLoaderService()
         result = csv_loader.csv_to_database(db, csv_file_path, clear_existing)
@@ -48,14 +48,12 @@ def load_csv_data(csv_file_path: str = None, clear_existing: bool = False):
                 
     except Exception as e:
         print(f"❌ Error loading CSV: {e}")
-    finally:
-        db.close()
 
 def train_risk_models():
     """Train ML models for risk prediction"""
     print("Training risk prediction models...")
     
-    db = SessionLocal()
+    db = get_db()
     try:
         risk_service = RiskPredictionService()
         metrics = risk_service.train_model(db)
@@ -71,14 +69,12 @@ def train_risk_models():
         
     except Exception as e:
         print(f"❌ Error training models: {e}")
-    finally:
-        db.close()
 
 def detect_anomalies():
     """Run anomaly detection on recent data"""
     print("Running anomaly detection...")
     
-    db = SessionLocal()
+    db = get_db()
     try:
         anomaly_service = AnomalyDetectionService()
         anomalies = anomaly_service.detect_daily_log_anomalies(db, days_back=30)
@@ -92,14 +88,12 @@ def detect_anomalies():
             
     except Exception as e:
         print(f"❌ Error detecting anomalies: {e}")
-    finally:
-        db.close()
 
 async def generate_ai_insights(project_id: str = None):
     """Generate AI insights using Gemini"""
     print("Generating AI insights...")
     
-    db = SessionLocal()
+    db = get_db()
     try:
         gemini_service = GeminiAnalyticsService()
         
@@ -126,29 +120,35 @@ async def generate_ai_insights(project_id: str = None):
     except Exception as e:
         print(f"❌ Error generating AI insights: {e}")
         print("💡 Make sure GOOGLE_API_KEY is set in your environment")
-    finally:
-        db.close()
 
 def show_system_status():
     """Show system status and configuration"""
     print("\n" + "="*50)
-    print("IT Analytics Platform - System Status")
+    print("IT Analytics Platform - System Status (Supabase)")
     print("="*50)
     
-    # Check database
+    # Check Supabase connection
     try:
-        db = SessionLocal()
-        project_count = db.query(Project).count()
-        employee_count = db.query(Employee).count()
-        risk_score_count = db.query(RiskScore).count()
-        db.close()
+        db = get_db()
         
-        print(f"📊 Database Status: CONNECTED")
+        # Count projects
+        projects_response = db.table('projects').select('id', count='exact').execute()
+        project_count = projects_response.count
+        
+        # Count employees
+        employees_response = db.table('employees').select('id', count='exact').execute()
+        employee_count = employees_response.count
+        
+        # Count risk scores
+        risk_response = db.table('risk_scores').select('id', count='exact').execute()
+        risk_score_count = risk_response.count
+        
+        print(f"📊 Supabase Database: CONNECTED")
         print(f"   - Projects: {project_count}")
-        print(f"   - Employees: {employee_count}") 
+        print(f"   - Employees: {employee_count}")
         print(f"   - Risk Scores: {risk_score_count}")
     except Exception as e:
-        print(f"📊 Database Status: ERROR - {e}")
+        print(f"📊 Supabase Database: ERROR - {e}")
     
     # Check Gemini AI
     from app.config import settings
@@ -156,6 +156,12 @@ def show_system_status():
         print("🤖 Gemini AI: CONFIGURED")
     else:
         print("🤖 Gemini AI: NOT CONFIGURED (set GOOGLE_API_KEY)")
+    
+    # Check Supabase config
+    if settings.SUPABASE_URL and settings.SUPABASE_KEY:
+        print("🔑 Supabase Config: CONFIGURED")
+    else:
+        print("🔑 Supabase Config: INCOMPLETE (check SUPABASE_URL and SUPABASE_KEY)")
     
     # Check models
     if os.path.exists("models/risk_prediction_model.pkl"):
@@ -166,7 +172,7 @@ def show_system_status():
     print("="*50)
 
 def main():
-    parser = argparse.ArgumentParser(description="IT Analytics Platform CLI")
+    parser = argparse.ArgumentParser(description="IT Analytics Platform CLI (Supabase Edition)")
     parser.add_argument("--setup-db", action="store_true", help="Setup database tables")
     parser.add_argument("--load-csv", nargs='?', const="default", help="Load CSV file")
     parser.add_argument("--clear-existing", action="store_true", help="Clear existing data before loading CSV")
@@ -207,7 +213,7 @@ def main():
     
     # Run server (default if no other commands)
     if args.run_server or not any(vars(args).values()):
-        print(f"\n🚀 Starting IT Analytics Platform Server...")
+        print(f"\n🚀 Starting IT Analytics Platform Server (Supabase Backend)...")
         print(f"   📍 Host: {args.host}")
         print(f"   🔌 Port: {args.port}")
         print(f"   📚 API Docs: http://{args.host}:{args.port}/docs")

@@ -1,10 +1,16 @@
 import os
 from pydantic_settings import BaseSettings
 from typing import Optional
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 class Settings(BaseSettings):
-    # Database
-    DATABASE_URL: str = os.getenv("DATABASE_URL", "sqlite:///./it_analytics.db")
+    # Supabase Configuration
+    SUPABASE_URL: str = os.getenv("SUPABASE_URL", "")
+    SUPABASE_KEY: str = os.getenv("SUPABASE_KEY", "")
+    SUPABASE_DATABASE_URL: str = os.getenv("SUPABASE_DATABASE_URL", "")
     
     # API Settings
     API_V1_STR: str = "/api/v1"
@@ -38,5 +44,16 @@ class Settings(BaseSettings):
     class Config:
         case_sensitive = True
         env_file = ".env"
+        env_file_encoding = 'utf-8'
 
 settings = Settings()
+
+# Validate critical settings on import
+if not settings.SUPABASE_URL or not settings.SUPABASE_KEY:
+    raise ValueError("SUPABASE_URL and SUPABASE_KEY must be set in environment variables")
+
+if not settings.SUPABASE_DATABASE_URL:
+    raise ValueError("SUPABASE_DATABASE_URL must be set for database initialization")
+
+if not settings.GOOGLE_API_KEY:
+    print("⚠️  WARNING: GOOGLE_API_KEY is not set. AI features will not work.")

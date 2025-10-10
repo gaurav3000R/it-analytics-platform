@@ -1,47 +1,58 @@
-# Implementing the placeholder ./backend/app/services/resource_utilization.py
-
-#===== ./backend/app/services/resource_utilization.py =====
-
 import pandas as pd
 import numpy as np
 from datetime import datetime, timedelta
 from typing import Dict, List, Any
-from sqlalchemy.orm import Session
-from sqlalchemy import func  # Add if missing for queries
+from supabase import Client
 
-from app.models.employee import Employee
-from app.models import DailyLog  # FIXED
-
-# ... (rest unchanged)
+from app.database import get_db
 
 class ResourceUtilizationService:
     def __init__(self):
         self.underutilization_threshold = 0.6  # 60% of expected hours
         self.overutilization_threshold = 1.3   # 130% of expected hours
         
-    def analyze_team_utilization(self, db: Session, days_back: int = 14) -> Dict[str, Any]:
+    def analyze_team_utilization(self, db: Client, days_back: int = 14) -> Dict[str, Any]:
         """Analyze team utilization and generate alerts"""
         
         start_date = datetime.now() - timedelta(days=days_back)
         
         # Get employee utilization data
-        utilization_data = db.query(
-            Employee.id,
-            Employee.name,
-            Employee.role,
-            Employee.max_hours_per_day,
-            func.avg(DailyLog.hours_logged).label('avg_daily_hours'),
-            func.sum(DailyLog.hours_logged).label('total_hours'),
-            func.count(func.distinct(func.date(DailyLog.date))).label('active_days')
-        ).join(DailyLog).filter(
-            DailyLog.date >= start_date,
-            Employee.is_active == True
-        ).group_by(Employee.id).all()
+        utilization_data = db.table("daily_logs").select(
+            "employees(id, name, role, max_hours_per_day), hours_logged, date"
+        ).gte("date", start_date.isoformat()).eq("employees.is_active", True).execute().data
+        
+        # Process data to calculate aggregates
+        df = pd.DataFrame(utilization_data)
+        if df.empty:
+            return {
+                "alerts": [],
+                "utilization_summary": [],
+                "period_days": days_back,
+                "summary_stats": {}
+            }
+        
+        # Extract employee data and aggregate daily logs
+        df['employee_id'] = df['employees'].apply(lambda x: x['id'])
+        df['employee_name'] = df['employees'].apply(lambda x: x['name'])
+        df['employee_role'] = df['employees'].apply(lambda x: x['role'])
+        df['max_hours_per_day'] = df['employees'].apply(lambda x: x['max_hours_per_day'])
+        
+        # Group by employee to calculate utilization metrics
+        grouped = df.groupby('employee_id').agg({
+            'employee_name': 'first',
+            'employee_role': 'first',
+            'max_hours_per_day': 'first',
+            'hours_logged': ['mean', 'sum'],
+            'date': lambda x: len(set(pd.to_datetime(x).dt.date))
+        }).reset_index()
+        
+        grouped.columns = ['employee_id', 'name', 'role', 'max_hours_per_day', 
+                         'avg_daily_hours', 'total_hours', 'active_days']
         
         alerts = []
         utilization_summary = []
         
-        for emp_data in utilization_data:
+        for _, emp_data in grouped.iterrows():
             expected_daily_hours = emp_data.max_hours_per_day
             actual_avg_hours = emp_data.avg_daily_hours or 0
             utilization_rate = actual_avg_hours / expected_daily_hours if expected_daily_hours > 0 else 0
@@ -50,7 +61,7 @@ class ResourceUtilizationService:
             if utilization_rate < self.underutilization_threshold:
                 alerts.append({
                     "type": "underutilization",
-                    "employee_id": emp_data.id,
+                    "employee_id": emp_data.employee_id,
                     "employee_name": emp_data.name,
                     "severity": "high" if utilization_rate < 0.4 else "medium",
                     "utilization_rate": utilization_rate,
@@ -60,7 +71,7 @@ class ResourceUtilizationService:
             elif utilization_rate > self.overutilization_threshold:
                 alerts.append({
                     "type": "overutilization",
-                    "employee_id": emp_data.id,
+                    "employee_id": emp_data.employee_id,
                     "employee_name": emp_data.name,
                     "severity": "high" if utilization_rate > 1.5 else "medium",
                     "utilization_rate": utilization_rate,
@@ -68,7 +79,7 @@ class ResourceUtilizationService:
                 })
             
             utilization_summary.append({
-                "employee_id": emp_data.id,
+                "employee_id": emp_data.employee_id,
                 "name": emp_data.name,
                 "role": emp_data.role,
                 "utilization_rate": utilization_rate,
@@ -101,7 +112,7 @@ class ResourceUtilizationService:
             "optimal_count": len([r for r in rates if self.underutilization_threshold <= r <= self.overutilization_threshold])
         }
         
-    def get_rebalancing_suggestions(self, db: Session) -> List[Dict[str, Any]]:
+    def get_rebalancing_suggestions(self, db: Client) -> List[Dict[str, Any]]:
         """Generate resource rebalancing suggestions"""
         utilization_data = self.analyze_team_utilization(db)
         

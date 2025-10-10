@@ -41,5 +41,6 @@ dependencies = [
     "seaborn>=0.13.0",
     "sqlalchemy>=2.0.23",
     "sqlmodel>=0.0.24",
+    "supabase>=2.22.0",
     "uvicorn[standard]>=0.32.1",
 ]

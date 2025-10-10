@@ -5,7 +5,7 @@ import logging
 import uvicorn
 
 from app.config import settings
-from app.database import engine, Base
+from app.database import get_db, init_db
 from app.api import projects, risks, analytics, ai_insights, bug_tracker, resource_utilization, cost_forecasting
 from app.middleware import MonitoringMiddleware, metrics_endpoint
 from datetime import datetime, timedelta
@@ -22,15 +22,26 @@ async def lifespan(app: FastAPI):
     # Startup
     logger.info("Starting IT Analytics Platform...")
     
-    # Create database tables
-    Base.metadata.create_all(bind=engine)
-    logger.info("Database tables created/verified")
+    # Initialize Supabase database tables
+    try:
+        init_db()
+        logger.info("Supabase database tables created/verified")
+    except Exception as e:
+        logger.error(f"Error initializing Supabase database: {str(e)}")
+        logger.error("Ensure SUPABASE_URL and SUPABASE_KEY are correctly set in .env")
+        raise Exception(f"Failed to initialize Supabase database: {str(e)}")
     
     # Check Gemini API key
     if settings.GOOGLE_API_KEY:
         logger.info("Gemini AI integration enabled")
     else:
         logger.warning("Gemini AI integration disabled - GOOGLE_API_KEY not set")
+    
+    # Check Supabase configuration
+    if settings.SUPABASE_URL and settings.SUPABASE_KEY:
+        logger.info("Supabase connection configured")
+    else:
+        logger.warning("Supabase not fully configured - check SUPABASE_URL and SUPABASE_KEY")
     
     yield
     
@@ -41,7 +52,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title=settings.PROJECT_NAME,
     version=settings.VERSION,
-    description="AI-Powered Early Warning System for IT Services Projects with Gemini AI Integration",
+    description="AI-Powered Early Warning System for IT Services Projects with Gemini AI Integration (Supabase Backend)",
     lifespan=lifespan
 )
 
@@ -76,6 +87,7 @@ async def root():
         "message": "IT Analytics Platform API",
         "version": settings.VERSION,
         "status": "running",
+        "database": "Supabase",
         "features": {
             "risk_prediction": True,
             "anomaly_detection": True,
@@ -92,6 +104,18 @@ async def health_check():
     """Health check endpoint"""
     from app.middleware.monitoring import get_system_metrics
     
+    # Test Supabase connection
+    supabase_status = "not_configured"
+    if settings.SUPABASE_URL and settings.SUPABASE_KEY:
+        try:
+            db = get_db()
+            # Simple query to test connection
+            result = db.table('projects').select("id").limit(1).execute()
+            supabase_status = "connected" if result.data else "connected_no_data"
+        except Exception as e:
+            supabase_status = f"error: {str(e)}"
+            logger.error(f"Supabase health check failed: {str(e)}")
+    
     # Test Gemini connection if API key is available
     gemini_status = "not_configured"
     if settings.GOOGLE_API_KEY:
@@ -101,14 +125,16 @@ async def health_check():
             gemini_status = "connected"
         except Exception as e:
             gemini_status = f"error: {str(e)}"
+            logger.error(f"Gemini health check failed: {str(e)}")
     
     return {
-        "status": "healthy",
+        "status": "healthy" if supabase_status.startswith("connected") else "unhealthy",
         "timestamp": datetime.now().isoformat(),
         "system_metrics": get_system_metrics(),
         "integrations": {
+            "supabase": supabase_status,
             "gemini_ai": gemini_status,
-            "database": "connected"
+            "database_type": "Supabase/PostgreSQL"
         }
     }
 

@@ -1,24 +1,23 @@
 from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile, File
-from sqlalchemy.orm import Session
 from typing import List, Optional
 import logging
+from datetime import datetime
 
 from app.database import get_db
 from app.services.data_processor import DataProcessorService
-from app.services.csv_loader import CSVLoaderService  # NEW
-from app.models.project import Project
+from app.services.csv_loader import CSVLoaderService
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/projects", tags=["projects"])
 
 data_processor = DataProcessorService()
-csv_loader = CSVLoaderService()  # NEW
+csv_loader = CSVLoaderService()
 
 @router.post("/upload-csv")
 async def upload_csv_file(
     file: UploadFile = File(...),
     clear_existing: bool = Query(default=False),
-    db: Session = Depends(get_db)
+    db = Depends(get_db)
 ):
     """Upload and process CSV file with project risk data"""
     
@@ -54,7 +53,7 @@ async def upload_csv_file(
 @router.post("/load-default-csv")
 async def load_default_csv(
     clear_existing: bool = Query(default=False),
-    db: Session = Depends(get_db)
+    db = Depends(get_db)
 ):
     """Load the default project risk dataset CSV"""
     try:
@@ -78,12 +77,11 @@ async def get_csv_summary():
         logger.error(f"Error getting CSV summary: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
-# Keep all existing endpoints...
 @router.post("/generate-sample-data")
 async def generate_sample_data(
     num_projects: int = Query(default=10, ge=1, le=50),
     num_employees: int = Query(default=20, ge=5, le=100),
-    db: Session = Depends(get_db)
+    db = Depends(get_db)
 ):
     """Generate sample data for demonstration (legacy - use CSV instead)"""
     try:
@@ -102,30 +100,34 @@ async def get_all_projects(
     risk_level: Optional[str] = Query(None),
     project_type: Optional[str] = Query(None),
     limit: int = Query(default=100, le=500),
-    db: Session = Depends(get_db)
+    db = Depends(get_db)
 ):
     """Get all projects with optional filtering"""
     try:
-        query = db.query(Project)
+        # Build Supabase query
+        query = db.table('projects').select('*')
         
         if risk_level:
-            query = query.filter(Project.risk_level == risk_level)
+            query = query.eq('risk_level', risk_level)
         if project_type:
-            query = query.filter(Project.project_type == project_type)
+            query = query.eq('project_type', project_type)
             
-        projects = query.limit(limit).all()
+        query = query.limit(limit)
+        
+        response = query.execute()
+        projects = response.data
         
         return [
             {
-                "id": p.id,
-                "project_id": p.project_id,
-                "project_type": p.project_type,
-                "budget_usd": p.project_budget_usd,
-                "team_size": p.team_size,
-                "complexity_score": p.complexity_score,
-                "risk_level": p.risk_level,
-                "team_experience": p.team_experience_level,
-                "has_ai_insights": bool(p.ai_risk_analysis or p.ai_recommendations)
+                "id": p['id'],
+                "project_id": p['project_id'],
+                "project_type": p.get('project_type'),
+                "budget_usd": p.get('project_budget_usd'),
+                "team_size": p.get('team_size'),
+                "complexity_score": p.get('complexity_score'),
+                "risk_level": p.get('risk_level'),
+                "team_experience": p.get('team_experience_level'),
+                "has_ai_insights": bool(p.get('ai_risk_analysis') or p.get('ai_recommendations'))
             }
             for p in projects
         ]
@@ -134,36 +136,39 @@ async def get_all_projects(
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/{project_id}")
-async def get_project(project_id: str, db: Session = Depends(get_db)):
+async def get_project(project_id: str, db = Depends(get_db)):
     """Get specific project details by project_id"""
     try:
-        project = db.query(Project).filter(Project.project_id == project_id).first()
-        if not project:
+        response = db.table('projects').select('*').eq('project_id', project_id).execute()
+        
+        if not response.data or len(response.data) == 0:
             raise HTTPException(status_code=404, detail="Project not found")
         
+        project = response.data[0]
+        
         return {
-            "id": project.id,
-            "project_id": project.project_id,
-            "project_type": project.project_type,
-            "team_size": project.team_size,
-            "budget_usd": project.project_budget_usd,
-            "timeline_months": project.estimated_timeline_months,
-            "complexity_score": project.complexity_score,
-            "risk_level": project.risk_level,
-            "team_experience": project.team_experience_level,
-            "methodology": project.methodology_used,
-            "stakeholder_count": project.stakeholder_count,
-            "change_frequency": project.change_request_frequency,
-            "budget_utilization": project.budget_utilization_rate,
-            "technical_debt": project.technical_debt_level,
-            "market_volatility": project.market_volatility,
+            "id": project['id'],
+            "project_id": project['project_id'],
+            "project_type": project.get('project_type'),
+            "team_size": project.get('team_size'),
+            "budget_usd": project.get('project_budget_usd'),
+            "timeline_months": project.get('estimated_timeline_months'),
+            "complexity_score": project.get('complexity_score'),
+            "risk_level": project.get('risk_level'),
+            "team_experience": project.get('team_experience_level'),
+            "methodology": project.get('methodology_used'),
+            "stakeholder_count": project.get('stakeholder_count'),
+            "change_frequency": project.get('change_request_frequency'),
+            "budget_utilization": project.get('budget_utilization_rate'),
+            "technical_debt": project.get('technical_debt_level'),
+            "market_volatility": project.get('market_volatility'),
             "ai_insights": {
-                "risk_analysis": project.ai_risk_analysis,
-                "recommendations": project.ai_recommendations,
-                "last_updated": project.ai_insights_updated_at.isoformat() if project.ai_insights_updated_at else None
+                "risk_analysis": project.get('ai_risk_analysis'),
+                "recommendations": project.get('ai_recommendations'),
+                "last_updated": project.get('ai_insights_updated_at')
             },
-            "created_at": project.created_at.isoformat(),
-            "updated_at": project.updated_at.isoformat()
+            "created_at": project.get('created_at'),
+            "updated_at": project.get('updated_at')
         }
     except HTTPException:
         raise
