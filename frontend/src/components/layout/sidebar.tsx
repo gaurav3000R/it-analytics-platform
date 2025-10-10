@@ -37,16 +37,16 @@ export function Sidebar() {
   return (
     <aside
       className={cn(
-        'fixed left-0 top-0 z-40 h-screen transition-all duration-300 glass border-r border-white/10',
+        'fixed left-0 top-0 z-40 h-screen transition-all duration-300 bg-[#161b22] border-r border-[#30363d] backdrop-blur-xl',
         isCollapsed ? 'w-20' : 'w-64'
       )}
     >
       <div className="flex h-full flex-col">
         {/* Logo */}
-        <div className="flex h-16 items-center justify-between px-4 border-b border-white/10">
+        <div className="flex h-16 items-center justify-between px-4 border-b border-[#30363d]">
           {!isCollapsed && (
             <Link href="/" className="flex items-center gap-2">
-              <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
+              <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center shadow-lg shadow-blue-500/30">
                 <BarChart3 className="h-5 w-5 text-white" />
               </div>
               <span className="text-xl font-bold gradient-text">IT Analytics</span>
@@ -54,7 +54,7 @@ export function Sidebar() {
           )}
           <button
             onClick={toggleCollapsed}
-            className="p-2 rounded-lg hover:bg-white/10 transition-colors"
+            className="p-2 rounded-lg hover:bg-white/[0.06] transition-colors text-gray-300 hover:text-white"
           >
             {isCollapsed ? (
               <ChevronRight className="h-5 w-5" />
@@ -77,8 +77,8 @@ export function Sidebar() {
                 className={cn(
                   'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all',
                   isActive
-                    ? 'bg-purple-500/20 text-purple-400 shadow-lg shadow-purple-500/20'
-                    : 'text-gray-400 hover:bg-white/10 hover:text-white',
+                    ? 'bg-blue-500/20 text-blue-400 shadow-lg shadow-blue-500/20 border border-blue-500/30'
+                    : 'text-gray-400 hover:bg-white/[0.06] hover:text-white',
                   isCollapsed && 'justify-center'
                 )}
                 title={isCollapsed ? item.name : undefined}
@@ -91,11 +91,11 @@ export function Sidebar() {
         </nav>
 
         {/* Footer */}
-        <div className="border-t border-white/10 p-4">
+        <div className="border-t border-[#30363d] p-4">
           <Link
             href="/settings"
             className={cn(
-              'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-gray-400 transition-all hover:bg-white/10 hover:text-white',
+              'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-gray-400 transition-all hover:bg-white/[0.06] hover:text-white',
               isCollapsed && 'justify-center'
             )}
             title={isCollapsed ? 'Settings' : undefined}

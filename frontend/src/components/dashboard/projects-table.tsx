@@ -36,8 +36,8 @@ export function ProjectsTable({ projects }: ProjectsTableProps) {
                 onClick={() => setFilter(f as typeof filter)}
                 className={`px-3 py-1 rounded-lg text-sm font-medium transition-all ${
                   filter === f
-                    ? 'bg-purple-500 text-white'
-                    : 'bg-white/5 text-gray-400 hover:bg-white/10'
+                    ? 'bg-blue-500 text-white shadow-lg shadow-blue-500/30'
+                    : 'bg-white/[0.03] text-gray-400 hover:bg-white/[0.06]'
                 }`}
               >
                 {f.charAt(0).toUpperCase() + f.slice(1)}

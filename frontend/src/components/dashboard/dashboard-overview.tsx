@@ -56,7 +56,7 @@ export function DashboardOverview() {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="text-center space-y-4">
-          <div className="w-16 h-16 border-4 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto" />
+          <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto" />
           <p className="text-gray-400">Loading analytics...</p>
         </div>
       </div>
@@ -97,7 +97,7 @@ export function DashboardOverview() {
       value: overview?.total_employees || 0,
       change: '+5%',
       positive: true,
-      color: 'from-purple-500 to-pink-500',
+      color: 'from-blue-500 to-cyan-500',
     },
     {
       icon: AlertTriangle,
