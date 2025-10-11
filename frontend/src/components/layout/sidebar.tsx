@@ -40,9 +40,10 @@ export function Sidebar() {
     <aside className={cn(
       'fixed left-0 top-16 bottom-0',
       'w-64',
-      'bg-[#0A0E27]/80 backdrop-blur-2xl',
-      'border-r border-white/10',
-      'overflow-y-auto'
+      'bg-white/90 backdrop-blur-2xl',
+      'border-r border-gray-200',
+      'overflow-y-auto',
+      'shadow-sm'
     )}>
       <nav className="p-4 space-y-2">
         {navigation.map((item) => {
@@ -57,20 +58,20 @@ export function Sidebar() {
                 'flex items-center gap-3 px-4 py-3 rounded-xl',
                 'font-medium transition-all duration-300',
                 isActive ? [
-                  'bg-gradient-to-r from-cyan-500/10 to-purple-500/10',
-                  'border border-cyan-500/30',
-                  'text-white',
-                  'shadow-[0_0_10px_rgba(0,245,255,0.2)]'
+                  'bg-gradient-to-r from-cyan-50 to-purple-50',
+                  'border border-cyan-200',
+                  'text-cyan-700',
+                  'shadow-md'
                 ] : [
-                  'text-gray-400',
-                  'hover:bg-white/5',
-                  'hover:text-white'
+                  'text-gray-600',
+                  'hover:bg-gray-50',
+                  'hover:text-gray-900'
                 ]
               )}
             >
               <Icon className={cn(
                 'w-5 h-5',
-                isActive ? 'text-cyan-400' : 'text-gray-500'
+                isActive ? 'text-cyan-600' : 'text-gray-500'
               )} />
               {item.name}
             </Link>
@@ -82,14 +83,14 @@ export function Sidebar() {
       <div className="absolute bottom-0 left-0 right-0 p-4">
         <div className={cn(
           'rounded-xl p-4',
-          'bg-gradient-to-br from-purple-500/10 to-pink-500/10',
-          'border border-purple-500/20'
+          'bg-gradient-to-br from-purple-50 to-pink-50',
+          'border border-purple-200'
         )}>
-          <div className="text-sm font-medium text-white mb-1">
+          <div className="text-sm font-medium text-gray-900 mb-1">
             System Status
           </div>
-          <div className="flex items-center gap-2 text-xs text-gray-400">
-            <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
+          <div className="flex items-center gap-2 text-xs text-gray-600">
+            <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
             All systems operational
           </div>
         </div>

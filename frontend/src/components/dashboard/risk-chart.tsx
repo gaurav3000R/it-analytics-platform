@@ -31,21 +31,23 @@ export function RiskChart({ data }: RiskChartProps) {
                   <stop offset="95%" stopColor="#a855f7" stopOpacity={0} />
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" />
+              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
               <XAxis
                 dataKey="name"
-                stroke="#9ca3af"
+                stroke="#6b7280"
                 fontSize={12}
                 tickLine={false}
               />
-              <YAxis stroke="#9ca3af" fontSize={12} tickLine={false} />
+              <YAxis stroke="#6b7280" fontSize={12} tickLine={false} />
               <Tooltip
                 contentStyle={{
-                  backgroundColor: 'rgba(30, 41, 59, 0.95)',
-                  border: '1px solid rgba(168, 85, 247, 0.3)',
+                  backgroundColor: 'rgba(255, 255, 255, 0.98)',
+                  border: '1px solid #e5e7eb',
                   borderRadius: '8px',
-                  color: '#fff',
+                  color: '#1f2937',
+                  boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
                 }}
+                labelStyle={{ color: '#1f2937' }}
               />
               <Area
                 type="monotone"
@@ -58,7 +60,7 @@ export function RiskChart({ data }: RiskChartProps) {
             </AreaChart>
           </ResponsiveContainer>
         ) : (
-          <div className="flex items-center justify-center h-[300px] text-gray-400">
+          <div className="flex items-center justify-center h-[300px] text-gray-600">
             No trending risk data available
           </div>
         )}

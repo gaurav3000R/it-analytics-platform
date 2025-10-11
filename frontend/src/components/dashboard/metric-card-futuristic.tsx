@@ -39,11 +39,12 @@ export const MetricCardFuturistic: React.FC<MetricCardProps> = ({
         'relative rounded-2xl p-6',
         'bg-gradient-to-br backdrop-blur-xl border',
         'overflow-hidden animate-pulse',
+        'shadow-sm',
         gradients[color]
       )}>
-        <div className="h-4 bg-white/10 rounded w-1/2 mb-4" />
-        <div className="h-8 bg-white/10 rounded w-3/4 mb-2" />
-        <div className="h-3 bg-white/10 rounded w-1/3" />
+        <div className="h-4 bg-gray-200 rounded w-1/2 mb-4" />
+        <div className="h-8 bg-gray-200 rounded w-3/4 mb-2" />
+        <div className="h-3 bg-gray-200 rounded w-1/3" />
       </div>
     );
   }
@@ -54,12 +55,13 @@ export const MetricCardFuturistic: React.FC<MetricCardProps> = ({
       'bg-gradient-to-br backdrop-blur-xl border',
       'overflow-hidden transition-all duration-300',
       'hover:scale-[1.02] hover:-translate-y-1',
+      'shadow-sm hover:shadow-lg',
       gradients[color]
     )}>
       {/* Background Pattern */}
-      <div className="absolute inset-0 opacity-5">
+      <div className="absolute inset-0 opacity-10">
         <div className="absolute inset-0" style={{
-          backgroundImage: `repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,255,255,0.1) 2px, rgba(255,255,255,0.1) 4px)`
+          backgroundImage: `repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.05) 2px, rgba(0,0,0,0.05) 4px)`
         }} />
       </div>
       
@@ -70,20 +72,20 @@ export const MetricCardFuturistic: React.FC<MetricCardProps> = ({
             {title}
           </span>
           {icon && (
-            <div className={cn('p-2 rounded-lg bg-white/5', iconColors[color])}>
+            <div className={cn('p-2 rounded-lg bg-white/50', iconColors[color])}>
               {icon}
             </div>
           )}
         </div>
         
-        <div className="text-white text-3xl font-bold mb-2">
+        <div className="text-gray-900 text-3xl font-bold mb-2">
           {value}
         </div>
         
         {change !== undefined && (
           <div className={cn(
             'flex items-center gap-1 text-xs font-medium',
-            change >= 0 ? 'text-green-400' : 'text-red-400'
+            change >= 0 ? 'text-green-600' : 'text-red-600'
           )}>
             {change >= 0 ? (
               <TrendingUp className="w-3 h-3" />

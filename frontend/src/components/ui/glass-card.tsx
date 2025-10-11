@@ -15,9 +15,9 @@ export const GlassCard: React.FC<GlassCardProps> = ({
   neonBorder = 'none',
 }) => {
   const borderColors = {
-    cyan: 'hover:border-cyan-500/50 hover:shadow-[0_0_20px_rgba(0,245,255,0.4)]',
-    purple: 'hover:border-purple-500/50 hover:shadow-[0_0_20px_rgba(168,85,247,0.4)]',
-    pink: 'hover:border-pink-500/50 hover:shadow-[0_0_20px_rgba(236,72,153,0.4)]',
+    cyan: 'hover:border-cyan-400 hover:shadow-lg hover:shadow-cyan-500/20',
+    purple: 'hover:border-purple-400 hover:shadow-lg hover:shadow-purple-500/20',
+    pink: 'hover:border-pink-400 hover:shadow-lg hover:shadow-pink-500/20',
     none: '',
   };
   
@@ -25,9 +25,10 @@ export const GlassCard: React.FC<GlassCardProps> = ({
     <div
       className={cn(
         'rounded-2xl p-6',
-        'bg-white/[0.05] backdrop-blur-2xl',
-        'border border-white/10',
-        hover && 'transition-all duration-300 hover:bg-white/[0.08] hover:-translate-y-1',
+        'bg-white/90 backdrop-blur-2xl',
+        'border border-gray-200',
+        'shadow-sm',
+        hover && 'transition-all duration-300 hover:bg-white hover:-translate-y-1 hover:shadow-md',
         neonBorder !== 'none' && borderColors[neonBorder],
         className
       )}

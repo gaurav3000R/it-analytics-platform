@@ -6,7 +6,7 @@ import { Header } from './header'
 
 export function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#0A0E27] via-[#0D1117] to-[#0A0E27]">
+    <div className="min-h-screen bg-gradient-to-br from-white via-gray-50 to-white">
       <Header />
       <Sidebar />
       <main className="ml-64 pt-16 min-h-screen">
