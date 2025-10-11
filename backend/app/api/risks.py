@@ -256,6 +256,45 @@ async def get_anomalies_dashboard(
         logger.error(f"Error getting anomaly dashboard: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
 
+@router.post("/detect-anomalies")
+async def detect_anomalies_endpoint(
+    days_back: int = Query(default=30, ge=1, le=90, description="Number of days to analyze"),
+    project_id: Optional[int] = Query(default=None, description="Optional: Analyze specific project"),
+    db: Client = Depends(get_db)
+):
+    """
+    Detect anomalies in daily logs (matches expected URL structure)
+    Detects: missing logs, unusual hours, productivity issues, pattern changes
+    """
+    try:
+        anomalies = anomaly_service.detect_daily_log_anomalies(db, days_back, project_id)
+
+        # Group anomalies by type for summary
+        by_type = {}
+        by_severity = {'critical': 0, 'high': 0, 'medium': 0, 'low': 0}
+
+        for anomaly in anomalies:
+            anom_type = anomaly['anomaly_type']
+            severity = anomaly['severity']
+
+            by_type[anom_type] = by_type.get(anom_type, 0) + 1
+            by_severity[severity] = by_severity.get(severity, 0) + 1
+
+        return {
+            "message": f"Anomaly detection completed for last {days_back} days",
+            "period_days": days_back,
+            "total_anomalies": len(anomalies),
+            "by_severity": by_severity,
+            "by_type": by_type,
+            "critical_count": by_severity['critical'],
+            "high_count": by_severity['high'],
+            "anomalies": anomalies[:50]  # Return top 50 for API response
+        }
+
+    except Exception as e:
+        logger.error(f"Error detecting anomalies: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Anomaly detection failed: {str(e)}")
+
 @router.get("/anomalies/list")
 async def list_anomalies(
     days_back: int = Query(default=7, ge=1, le=90, description="Number of days to retrieve"),
