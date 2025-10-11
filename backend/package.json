@@ -6,6 +6,9 @@
     "dev": "uv sync && . .venv/bin/activate && uvicorn app.main:app --reload",
     "build": "echo 'No build step for backend'",
     "test": "pytest",
-    "clean": "rm -rf .venv"
+    "clean": "rm -rf .venv",
+    "jupyter:lab": ". .venv/bin/activate && jupyter lab --ip=127.0.0.1 --port=8888 --no-browser",
+    "jupyter:notebook": ". .venv/bin/activate && jupyter notebook --ip=127.0.0.1 --port=8888 --no-browser",
+    "jupyter": "npm run jupyter:lab"
   }
 }

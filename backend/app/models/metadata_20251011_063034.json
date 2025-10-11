@@ -1,0 +1,23 @@
+{
+  "model_name": "Naive Bayes",
+  "model_file": "project_success_model_20251011_063034.joblib",
+  "scaler_file": "scaler_20251011_063034.joblib",
+  "features_file": "features_20251011_063034.json",
+  "feature_names": [
+    "Agile Effectiveness",
+    "Risk Mitigation",
+    "Management Satisfaction",
+    "Supply Chain Improvement",
+    "Time Efficiency",
+    "Cost Savings (%)"
+  ],
+  "training_date": "20251011_063034",
+  "train_samples": 160,
+  "test_samples": 40,
+  "metrics": {
+    "accuracy": 0.65,
+    "f1_score": 0.65,
+    "precision": 0.65,
+    "recall": 0.65
+  }
+}
