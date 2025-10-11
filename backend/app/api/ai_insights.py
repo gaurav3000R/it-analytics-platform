@@ -1,3 +1,5 @@
+# backend/app/api/ai_insights.py (FIXED)
+
 from fastapi import APIRouter, Depends, HTTPException, Query
 from supabase import Client
 from typing import Optional
@@ -61,7 +63,9 @@ async def get_project_insights(
 ):
     """Get existing AI insights for a project"""
     try:
-        project = db.table("projects").select("project_id, ai_risk_analysis, ai_recommendations, ai_insights_updated_at").eq("project_id", project_id).single().execute().data
+        project = db.table("projects").select(
+            "project_id, ai_risk_analysis, ai_recommendations, ai_insights_updated_at"
+        ).eq("project_id", project_id).single().execute().data
         
         if not project:
             raise HTTPException(status_code=404, detail="Project not found")
@@ -76,3 +80,35 @@ async def get_project_insights(
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to fetch project insights: {str(e)}")
+
+@router.get("/dashboard")
+async def get_ai_insights_dashboard(db: Client = Depends(get_db)):
+    """Get dashboard showing AI insights coverage across projects"""
+    try:
+        # Get all projects with AI insights
+        projects_response = db.table("projects").select(
+            "project_id, name, ai_risk_analysis, ai_recommendations, ai_insights_updated_at"
+        ).execute()
+        projects = projects_response.data
+        
+        with_insights = [p for p in projects if p.get('ai_risk_analysis') or p.get('ai_recommendations')]
+        without_insights = [p for p in projects if not (p.get('ai_risk_analysis') or p.get('ai_recommendations'))]
+        
+        return {
+            "total_projects": len(projects),
+            "projects_with_insights": len(with_insights),
+            "projects_without_insights": len(without_insights),
+            "coverage_percentage": (len(with_insights) / len(projects) * 100) if projects else 0,
+            "recent_insights": [
+                {
+                    "project_id": p['project_id'],
+                    "project_name": p.get('name', 'Unknown'),
+                    "has_risk_analysis": bool(p.get('ai_risk_analysis')),
+                    "has_recommendations": bool(p.get('ai_recommendations')),
+                    "last_updated": p.get('ai_insights_updated_at')
+                }
+                for p in sorted(with_insights, key=lambda x: x.get('ai_insights_updated_at', ''), reverse=True)[:10]
+            ]
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to generate dashboard: {str(e)}")
