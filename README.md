@@ -14,13 +14,13 @@ The **IT Analytics Platform** is a comprehensive FastAPI-based backend system de
 
 ### Key Features
 
-🎯 **Project Management** - Track and manage IT projects with comprehensive analytics
-📊 **Cost Forecasting** - ML-powered cost predictions and budget management
-💻 **Resource Utilization** - Monitor and optimize resource allocation across projects
-🐛 **Bug Tracking** - Advanced bug tracking with priority management
-⚠️ **Risk Management** - Identify and mitigate project risks proactively
-🤖 **AI Insights** - Google Gemini-powered intelligent recommendations and analysis
-📈 **Analytics Dashboard** - Real-time metrics and performance indicators
+🎯 **Project Management** - Track and manage IT projects with comprehensive analytics  
+📊 **Cost Forecasting** - ML-powered cost predictions and budget management  
+💻 **Resource Utilization** - Monitor and optimize resource allocation across projects  
+🐛 **Bug Tracking** - Advanced bug tracking with priority management  
+⚠️ **Risk Management** - Identify and mitigate project risks proactively  
+🤖 **AI Insights** - Google Gemini-powered intelligent recommendations and analysis  
+📈 **Analytics Dashboard** - Real-time metrics and performance indicators  
 🔐 **Secure API** - Production-ready with authentication and monitoring
 
 ## 🏗️ Architecture
@@ -50,7 +50,6 @@ it-analytics-platform/
 ├── scripts/                 # Utility scripts
 ├── agentic-ai/             # AI agent implementations
 └── docker-compose.yml       # Docker orchestration
-
 ```
 
 ### Technology Stack
@@ -539,26 +538,6 @@ footer
 ```
 
 Types: `feat`, `fix`, `docs`, `style`, `refactor`, `test`, `chore`
-
-## 📝 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🙏 Acknowledgments
-
-Built with:
-- [Next.js](https://nextjs.org/) - The React Framework for the Web
-- [FastAPI](https://fastapi.tiangolo.com/) - Modern Python web framework
-- [Turborepo](https://turbo.build/) - High-performance build system
-- [Tailwind CSS](https://tailwindcss.com/) - Utility-first CSS framework
-- [SQLModel](https://sqlmodel.tiangolo.com/) - SQL databases with Python
-- [UV](https://docs.astral.sh/uv/) - Fast Python package installer
-
-## 📞 Support
-
-- 📖 [Documentation](./docs/README.md)
-- 🐛 [Report Issues](https://github.com/your-org/it-analytics-platform/issues)
-- 💬 [Discussions](https://github.com/your-org/it-analytics-platform/discussions)
 
 ## 🛣️ Roadmap
 
