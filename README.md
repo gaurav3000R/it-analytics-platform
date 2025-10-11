@@ -25,62 +25,91 @@ The **IT Analytics Platform** is a comprehensive FastAPI-based backend system de
 
 ## 🏗️ Architecture
 
-This is a modern Python backend built with FastAPI:
+This is a **Turborepo monorepo** containing a FastAPI backend and Next.js frontend:
 
 ```
 it-analytics-platform/
-├── app/
-│   ├── api/                  # API route handlers
-│   │   ├── projects.py      # Project management endpoints
-│   │   ├── cost_forecasting.py  # Cost prediction APIs
-│   │   ├── resource_utilization.py  # Resource tracking
-│   │   ├── bug_tracker.py   # Bug management
-│   │   ├── risks.py         # Risk assessment
-│   │   ├── analytics.py     # Analytics endpoints
-│   │   └── ai_insights.py   # AI-powered insights
-│   ├── services/            # Business logic layer
-│   ├── models/              # Database models
-│   ├── middleware/          # Custom middleware (monitoring, etc.)
-│   ├── utils/               # Utility functions & Gemini client
-│   ├── config.py            # Application configuration
-│   ├── database.py          # Database connection
-│   └── main.py              # FastAPI application entry
-├── tests/                   # Test suite
-├── monitoring/              # Monitoring configurations
-├── scripts/                 # Utility scripts
-├── agentic-ai/             # AI agent implementations
-└── docker-compose.yml       # Docker orchestration
+├── backend/                 # Python FastAPI backend
+│   ├── app/
+│   │   ├── api/            # API route handlers
+│   │   │   ├── projects.py
+│   │   │   ├── cost_forecasting.py
+│   │   │   ├── resource_utilization.py
+│   │   │   ├── bug_tracker.py
+│   │   │   ├── risks.py
+│   │   │   ├── analytics.py
+│   │   │   └── ai_insights.py
+│   │   ├── services/       # Business logic layer
+│   │   ├── models/         # Database models
+│   │   ├── middleware/     # Custom middleware
+│   │   ├── utils/          # Utilities & Gemini client
+│   │   ├── config.py       # Configuration
+│   │   ├── database.py     # DB connection
+│   │   └── main.py         # FastAPI app entry
+│   ├── tests/              # Backend tests
+│   ├── monitoring/         # Monitoring configs
+│   ├── scripts/            # Utility scripts
+│   ├── agentic-ai/         # AI agent implementations
+│   ├── pyproject.toml      # Python dependencies (UV)
+│   ├── package.json        # Backend npm scripts
+│   └── docker-compose.yml  # Backend services
+│
+├── frontend/               # Next.js 15 + React 19 frontend
+│   ├── src/
+│   │   ├── app/           # Next.js app directory
+│   │   ├── components/    # React components
+│   │   ├── lib/           # Utilities & helpers
+│   │   └── styles/        # Global styles
+│   ├── public/            # Static assets
+│   ├── package.json       # Frontend dependencies
+│   └── next.config.ts     # Next.js config
+│
+├── dbt_project/           # dbt analytics transformations (optional)
+├── data/                  # Data storage
+├── docs/                  # Additional documentation
+├── infra/                 # Infrastructure configs
+│
+├── package.json           # Monorepo root (Turborepo)
+├── turbo.json             # Turborepo configuration
+└── dev-start.sh          # Convenient dev startup script
 ```
 
 ### Technology Stack
 
-| Component | Technology |
-|-----------|-----------|
-| **Framework** | FastAPI with async/await support |
+| Layer | Technology |
+|-------|-----------|
+| **Monorepo** | Turborepo for build orchestration |
+| **Frontend** | Next.js 15, React 19, TypeScript 5 |
+| **Styling** | Tailwind CSS v4, Radix UI components |
+| **State Management** | Zustand, TanStack Query |
+| **Backend** | FastAPI with async/await support |
 | **Language** | Python 3.13+ |
-| **Database** | PostgreSQL with asyncpg |
-| **ORM** | SQLAlchemy with Alembic migrations |
+| **Database** | PostgreSQL with asyncpg, SQLite for dev |
+| **ORM** | SQLAlchemy, SQLModel, Alembic migrations |
 | **AI/ML** | Google Gemini AI, scikit-learn |
 | **Data Processing** | Pandas, NumPy, SciPy |
-| **Visualization** | Matplotlib, Plotly |
+| **Visualization** | Matplotlib, Plotly, Recharts |
 | **Task Queue** | Celery with Redis |
 | **Monitoring** | Prometheus, psutil |
-| **Package Manager** | UV (ultra-fast Python package installer) |
+| **Package Managers** | npm (workspace), UV (Python) |
 | **Containerization** | Docker + Docker Compose |
 
 ## 🚀 Quick Start
 
 ### Prerequisites
 
-- [Python](https://www.python.org/) (v3.13 or later)
-- [UV](https://docs.astral.sh/uv/) (Fast Python package manager - **recommended**)
-- [PostgreSQL](https://www.postgresql.org/) (v15 or later)
-- [Redis](https://redis.io/) (for Celery task queue)
-- [Docker](https://www.docker.com/) (optional - for containerized setup)
+- **[Node.js](https://nodejs.org/)** v20+ and npm
+- **[Python](https://www.python.org/)** v3.13+
+- **[UV](https://docs.astral.sh/uv/)** (Fast Python package manager - **recommended**)
+- **[PostgreSQL](https://www.postgresql.org/)** v15+ (optional - SQLite works for development)
+- **[Redis](https://redis.io/)** (optional - for Celery task queue)
+- **[Docker](https://www.docker.com/)** (optional - for containerized setup)
 
 ### Installation
 
-#### Option 1: Local Development Setup
+#### Option 1: Quick Start with Turbo (Recommended)
+
+This monorepo uses [Turborepo](https://turbo.build/) for efficient builds and development.
 
 1. **Clone the repository**
 
@@ -92,61 +121,130 @@ cd it-analytics-platform
 2. **Install UV (if not already installed)**
 
 ```bash
+# macOS/Linux
 curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# Windows
+powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
 ```
 
-3. **Install dependencies**
+3. **Install all dependencies (monorepo root)**
 
 ```bash
-uv sync
+npm install
 ```
+
+This will install:
+- Turborepo and root dependencies
+- Frontend (Next.js) dependencies
+- Backend (Python) dependencies via UV
 
 4. **Set up environment variables**
 
 ```bash
-cp .env.example .env
-# Edit .env with your configuration (database URL, API keys, etc.)
+# Backend environment
+cp backend/.env.example backend/.env
+# Edit backend/.env with your configuration
 ```
 
-Required environment variables:
-- `DATABASE_URL` - PostgreSQL connection string
-- `GEMINI_API_KEY` - Google Gemini AI API key
-- `REDIS_URL` - Redis connection string for Celery
+Required environment variables in `backend/.env`:
+- `DATABASE_URL` - Database connection (defaults to SQLite)
+- `GOOGLE_API_KEY` - Google Gemini AI API key (optional)
+- `REDIS_URL` - Redis connection string (optional)
 - `SECRET_KEY` - Secret key for JWT tokens
 
-5. **Start the development server**
+5. **Start both frontend and backend**
 
 ```bash
-make dev
-# or
 npm run dev
-# or manually
-. .venv/bin/activate && uvicorn app.main:app --reload
-```
-
-The API will be available at:
-- 🔌 Backend API: [http://localhost:8000](http://localhost:8000)
-- 📚 Interactive API Docs: [http://localhost:8000/docs](http://localhost:8000/docs)
-- 📖 Alternative Docs: [http://localhost:8000/redoc](http://localhost:8000/redoc)
-
-#### Option 2: Docker Setup
-
-1. **Start all services with Docker Compose**
-
-```bash
-docker-compose up --build
 ```
 
 This starts:
-- FastAPI backend
-- PostgreSQL database
-- Redis cache
-- All necessary services
+- 🌐 **Frontend**: [http://localhost:3000](http://localhost:3000)
+- 🔌 **Backend API**: [http://localhost:8000](http://localhost:8000)
+- 📚 **API Docs**: [http://localhost:8000/docs](http://localhost:8000/docs)
+- 📖 **ReDoc**: [http://localhost:8000/redoc](http://localhost:8000/redoc)
 
-2. **Access the application**
+#### Option 2: Using the Dev Start Script
 
+We provide a convenient bash script that handles everything:
+
+```bash
+chmod +x dev-start.sh
+./dev-start.sh
+```
+
+The script will:
+- Check if required ports (3000, 8000) are available
+- Create Python virtual environment if needed
+- Install frontend dependencies if needed
+- Initialize database with sample data
+- Start both servers concurrently
+
+#### Option 3: Manual Setup (Individual Services)
+
+**Backend Setup:**
+
+```bash
+cd backend
+
+# Install Python dependencies with UV
+uv sync
+
+# Or use traditional pip/venv
+python3 -m venv .venv
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+pip install -e .
+
+# Set up environment
+cp .env.example .env
+# Edit .env as needed
+
+# Start backend server
+npm run dev
+# or manually: uvicorn app.main:app --reload
+```
+
+**Frontend Setup:**
+
+```bash
+cd frontend
+
+# Install Node dependencies
+npm install
+
+# Start frontend server
+npm run dev
+```
+
+#### Option 4: Docker Setup
+
+For a fully containerized environment:
+
+```bash
+# Start all services
+docker-compose up --build
+
+# Run in background
+docker-compose up -d
+
+# View logs
+docker-compose logs -f
+
+# Stop services
+docker-compose down
+```
+
+Docker Compose includes:
+- FastAPI backend (port 8000)
+- PostgreSQL database (port 5432)
+- Redis cache (port 6379)
+- Next.js frontend (port 3000)
+
+**Access the application:**
+- Frontend: [http://localhost:3000](http://localhost:3000)
 - API: [http://localhost:8000](http://localhost:8000)
-- Docs: [http://localhost:8000/docs](http://localhost:8000/docs)
+- API Docs: [http://localhost:8000/docs](http://localhost:8000/docs)
 
 ## 📚 API Endpoints
 
@@ -200,11 +298,52 @@ Comprehensive documentation files are available in the root directory:
 
 ## 🛠️ Development
 
-### Available Scripts
+### Available Scripts (Monorepo Root)
 
-#### Using Makefile
+The monorepo uses Turborepo to orchestrate tasks across workspaces:
 
 ```bash
+npm run dev       # Start both frontend and backend in dev mode
+npm run build     # Build both applications for production
+npm run test      # Run tests for all workspaces
+npm run clean     # Clean build artifacts and caches
+```
+
+### Frontend Commands
+
+```bash
+cd frontend
+
+npm run dev       # Start Next.js dev server (port 3000)
+npm run build     # Build for production
+npm run start     # Start production server
+npm run lint      # Run ESLint
+npm run clean     # Clean .next and node_modules
+```
+
+### Backend Commands
+
+```bash
+cd backend
+
+# Using npm scripts
+npm run dev       # Start FastAPI with auto-reload (port 8000)
+npm run test      # Run pytest tests
+npm run clean     # Remove .venv
+
+# Manual commands
+uv sync           # Sync Python dependencies
+. .venv/bin/activate  # Activate virtual environment
+uvicorn app.main:app --reload  # Start server manually
+pytest            # Run tests
+pytest --cov=app  # Run tests with coverage
+```
+
+### Using Makefile (Backend)
+
+```bash
+cd backend
+
 make dev          # Start development server
 make test         # Run tests
 make lint         # Run linting
@@ -212,42 +351,12 @@ make format       # Format code with black
 make clean        # Clean up cache and build files
 ```
 
-#### Using npm scripts
-
-```bash
-npm run dev       # Start development server with auto-reload
-npm run test      # Run pytest tests
-npm run clean     # Remove virtual environment
-```
-
-#### Manual commands
-
-```bash
-# Activate virtual environment
-. .venv/bin/activate
-
-# Start server
-uvicorn app.main:app --reload
-
-# Run tests
-pytest
-
-# Run tests with coverage
-pytest --cov=app tests/
-
-# Format code
-black app/
-isort app/
-
-# Lint code
-flake8 app/
-```
-
 ### Project Structure
 
+**Backend Structure:**
 ```
-app/
-├── api/              # API route handlers
+backend/app/
+├── api/                 # API route handlers
 │   ├── __init__.py
 │   ├── projects.py
 │   ├── cost_forecasting.py
@@ -256,24 +365,50 @@ app/
 │   ├── risks.py
 │   ├── analytics.py
 │   └── ai_insights.py
-├── services/         # Business logic
-├── models/           # Database models
-├── middleware/       # Custom middleware
+├── services/            # Business logic
+├── models/              # Database models
+├── middleware/          # Custom middleware
 │   ├── monitoring.py
 │   └── __init__.py
-├── utils/           # Utilities
+├── utils/              # Utilities
 │   ├── helpers.py
 │   └── gemini_client.py
-├── config.py        # Configuration
-├── database.py      # DB connection
-└── main.py          # App entry point
+├── config.py           # Configuration
+├── database.py         # DB connection
+└── main.py             # App entry point
+```
+
+**Frontend Structure:**
+```
+frontend/src/
+├── app/                # Next.js App Router
+│   ├── layout.tsx     # Root layout
+│   ├── page.tsx       # Home page
+│   ├── dashboard/     # Dashboard routes
+│   └── api/           # API routes
+├── components/         # React components
+│   ├── ui/            # Reusable UI components
+│   ├── layout/        # Layout components
+│   └── features/      # Feature-specific components
+├── lib/               # Utilities
+│   ├── api.ts         # API client
+│   └── utils.ts       # Helper functions
+└── styles/            # Global styles
+    └── globals.css    # Tailwind CSS imports
 ```
 
 ### Database Migrations
 
+Using Alembic for database migrations:
+
 ```bash
+cd backend
+
+# Activate virtual environment
+source .venv/bin/activate  # or .venv\Scripts\activate on Windows
+
 # Create new migration
-alembic revision --autogenerate -m "Description"
+alembic revision --autogenerate -m "Description of changes"
 
 # Apply migrations
 alembic upgrade head
@@ -283,23 +418,60 @@ alembic downgrade -1
 
 # View migration history
 alembic history
+
+# Check current version
+alembic current
+```
+
+### Code Quality
+
+**Backend (Python):**
+
+```bash
+cd backend
+
+# Format code
+black app/
+isort app/
+
+# Lint code
+flake8 app/
+
+# Type checking (if using mypy)
+mypy app/
+```
+
+**Frontend (TypeScript):**
+
+```bash
+cd frontend
+
+# Lint and fix
+npm run lint
+
+# Type check
+npx tsc --noEmit
 ```
 
 ## 🐳 Docker Support
 
 ### Using Docker Compose
 
-Run the entire stack with Docker Compose:
+The project includes Docker support for both backend and frontend services.
+
+**Backend Docker Compose (backend/docker-compose.yml):**
 
 ```bash
-# Start all services
+cd backend
+
+# Start backend services (FastAPI, PostgreSQL, Redis)
 docker-compose up --build
 
 # Run in background
 docker-compose up -d
 
 # View logs
-docker-compose logs -f
+docker-compose logs -f backend
 
 # Stop services
 docker-compose down
@@ -308,17 +480,60 @@ docker-compose down
 docker-compose down -v
 ```
 
+**Full Stack Docker (if configured at root):**
+
+```bash
+# From project root
+docker-compose up --build
+
+# Run in background
+docker-compose up -d
+
+# View all logs
+docker-compose logs -f
+
+# Stop all services
+docker-compose down
+```
+
 ### Docker Services
 
-The `docker-compose.yml` includes:
-- **FastAPI Backend** - Main application server
-- **PostgreSQL** - Database server
-- **Redis** - Cache and message broker
-- **Celery Worker** - Background task processor (if configured)
+The `docker-compose.yml` typically includes:
+- **FastAPI Backend** - Main application server (port 8000)
+- **PostgreSQL** - Database server (port 5432)
+- **Redis** - Cache and message broker (port 6379)
+- **Next.js Frontend** - Frontend application (port 3000) [if configured]
+
+### Building Individual Docker Images
+
+**Backend:**
+```bash
+cd backend
+docker build -t it-analytics-backend:latest .
+docker run -p 8000:8000 --env-file .env it-analytics-backend:latest
+```
+
+**Frontend:**
+```bash
+cd frontend
+docker build -t it-analytics-frontend:latest .
+docker run -p 3000:3000 it-analytics-frontend:latest
+```
 
 ## 🧪 Testing
 
+### Running All Tests (Monorepo)
+
 ```bash
+# From root - runs tests for all workspaces
+npm run test
+```
+
+### Backend Tests
+
+```bash
+cd backend
+
 # Run all tests
 pytest
 
@@ -333,11 +548,29 @@ pytest -v
 
 # Run and watch for changes
 pytest-watch
+
+# Run only failed tests
+pytest --lf
+```
+
+### Frontend Tests (when implemented)
+
+```bash
+cd frontend
+
+# Run tests
+npm run test
+
+# Run tests in watch mode
+npm run test:watch
+
+# Run tests with coverage
+npm run test:coverage
 ```
 
 ### Writing Tests
 
-Tests are located in the `tests/` directory:
+**Backend Tests (pytest):**
 
 ```python
 # tests/test_api.py
@@ -349,6 +582,27 @@ client = TestClient(app)
 def test_read_root():
     response = client.get("/")
     assert response.status_code == 200
+    assert "message" in response.json()
+
+def test_get_projects():
+    response = client.get("/api/projects")
+    assert response.status_code == 200
+    assert isinstance(response.json(), list)
+```
+
+**Frontend Tests (Jest/Vitest - when implemented):**
+
+```typescript
+// components/__tests__/Button.test.tsx
+import { render, screen } from '@testing-library/react'
+import { Button } from '../Button'
+
+describe('Button', () => {
+  it('renders button with text', () => {
+    render(<Button>Click me</Button>)
+    expect(screen.getByText('Click me')).toBeInTheDocument()
+  })
+})
 ```
 
 ## 📊 Features Overview
@@ -393,39 +647,69 @@ def test_read_root():
 
 ### Environment Variables
 
-Create a `.env` file in the root directory:
+**Backend (`backend/.env`):**
 
 ```env
-# Database
-DATABASE_URL=postgresql://user:password@localhost:5432/it_analytics
+# Database Configuration
+DATABASE_URL=sqlite:///./it_analytics.db
+# For PostgreSQL: postgresql://user:password@localhost:5432/it_analytics
+# For async PostgreSQL: postgresql+asyncpg://user:password@localhost:5432/it_analytics
 
-# Google Gemini AI
-GEMINI_API_KEY=your_gemini_api_key_here
+# Google Gemini AI (Optional - leave empty to disable AI features)
+GOOGLE_API_KEY=your_gemini_api_key_here
 
-# Redis
+# Redis (Optional - for caching and Celery)
 REDIS_URL=redis://localhost:6379/0
 
-# Application
-SECRET_KEY=your_secret_key_here
+# Security
+SECRET_KEY=your-secret-key-here-change-in-production
+ALGORITHM=HS256
+ACCESS_TOKEN_EXPIRE_MINUTES=30
+
+# Application Settings
 ENVIRONMENT=development
 DEBUG=True
 LOG_LEVEL=INFO
-
-# API Settings
 API_V1_PREFIX=/api
-CORS_ORIGINS=["http://localhost:3000", "http://localhost:8000"]
 
-# Celery
+# CORS Origins (comma-separated)
+CORS_ORIGINS=http://localhost:3000,http://localhost:8000
+
+# Celery (Optional)
 CELERY_BROKER_URL=redis://localhost:6379/0
 CELERY_RESULT_BACKEND=redis://localhost:6379/0
 ```
 
+**Frontend (if needed - `frontend/.env.local`):**
+
+```env
+# Backend API URL
+NEXT_PUBLIC_API_URL=http://localhost:8000
+
+# Optional: Other frontend environment variables
+NEXT_PUBLIC_APP_NAME=IT Analytics Platform
+```
+
 ### Configuration Files
 
-- **`app/config.py`** - Application configuration settings
-- **`pyproject.toml`** - Python project dependencies and metadata
-- **`docker-compose.yml`** - Docker service definitions
-- **`makefile`** - Development automation commands
+**Monorepo Configuration:**
+- **`package.json`** - Root workspace configuration
+- **`turbo.json`** - Turborepo pipeline configuration
+
+**Backend Configuration:**
+- **`backend/app/config.py`** - Application settings and configuration
+- **`backend/pyproject.toml`** - Python dependencies and project metadata
+- **`backend/package.json`** - Backend npm scripts
+- **`backend/docker-compose.yml`** - Backend Docker services
+- **`backend/makefile`** - Development automation commands
+- **`backend/alembic.ini`** - Database migration configuration
+
+**Frontend Configuration:**
+- **`frontend/package.json`** - Frontend dependencies
+- **`frontend/next.config.ts`** - Next.js configuration
+- **`frontend/tsconfig.json`** - TypeScript configuration
+- **`frontend/tailwind.config.ts`** - Tailwind CSS configuration (if exists)
+- **`frontend/postcss.config.mjs`** - PostCSS configuration
 
 ## 🔐 Security
 
@@ -590,50 +874,198 @@ Types: `feat`, `fix`, `docs`, `style`, `refactor`, `test`, `chore`
 
 ### Common Issues
 
-**Database Connection Error**
-```bash
-# Check PostgreSQL is running
-pg_isready -h localhost -p 5432
-
-# Verify DATABASE_URL in .env
-echo $DATABASE_URL
-```
-
-**Gemini AI API Error**
-```bash
-# Verify API key is set
-echo $GEMINI_API_KEY
-
-# Check API quota and limits
-```
-
-**Import Errors**
-```bash
-# Reinstall dependencies
-uv sync --force
-
-# Activate virtual environment
-. .venv/bin/activate
-```
-
 **Port Already in Use**
 ```bash
-# Find process using port 8000
+# Check what's using port 3000 or 8000
+lsof -i :3000
 lsof -i :8000
 
 # Kill the process
 kill -9 <PID>
+
+# Or use the dev-start.sh script which checks ports automatically
+./dev-start.sh
 ```
+
+**Backend - Database Connection Error**
+```bash
+# Check if PostgreSQL is running (if using PostgreSQL)
+pg_isready -h localhost -p 5432
+
+# Verify DATABASE_URL in backend/.env
+cd backend
+cat .env | grep DATABASE_URL
+
+# For SQLite (default), ensure directory permissions
+ls -la it_analytics.db
+```
+
+**Backend - Import Errors**
+```bash
+cd backend
+
+# Reinstall dependencies with UV
+uv sync --force
+
+# Or with traditional pip
+rm -rf .venv
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -e .
+```
+
+**Backend - Gemini AI API Error**
+```bash
+# Verify API key is set
+cd backend
+cat .env | grep GOOGLE_API_KEY
+
+# The application should work without Gemini - it's optional
+# Check logs for specific error messages
+```
+
+**Frontend - Module Not Found**
+```bash
+cd frontend
+
+# Clear cache and reinstall
+rm -rf node_modules .next
+npm install
+
+# Clear npm cache if needed
+npm cache clean --force
+npm install
+```
+
+**Frontend - Build Errors**
+```bash
+cd frontend
+
+# Check Node version (needs v20+)
+node --version
+
+# Clear Next.js cache
+rm -rf .next
+
+# Rebuild
+npm run build
+```
+
+**Turborepo Cache Issues**
+```bash
+# Clear Turbo cache
+npx turbo clean
+rm -rf .turbo
+
+# Or use the clean script
+npm run clean
+```
+
+**Python Version Issues**
+```bash
+# Check Python version (needs 3.13+)
+python3 --version
+
+# If using UV, it should handle Python version
+uv --version
+
+# Install specific Python version with pyenv
+pyenv install 3.13
+pyenv local 3.13
+```
+
+**Dependencies Out of Sync**
+```bash
+# Reinstall everything from root
+npm install
+
+# Force reinstall backend dependencies
+cd backend && uv sync --force
+
+# Force reinstall frontend dependencies
+cd frontend && npm ci
+```
+
+## 🏢 Monorepo Structure
+
+This project uses **Turborepo** to manage a monorepo containing multiple workspaces:
+
+### Why Turborepo?
+
+- **Fast Builds**: Intelligent caching and parallelization
+- **Task Orchestration**: Run tasks across multiple packages efficiently
+- **Dependency Management**: Shared dependencies and consistent versions
+- **Developer Experience**: Simple commands to manage complex workflows
+
+### Workspace Configuration
+
+The monorepo is configured in `package.json`:
+
+```json
+{
+  "workspaces": [
+    "frontend",
+    "backend"
+  ]
+}
+```
+
+### Pipeline Configuration
+
+Tasks are defined in `turbo.json`:
+
+```json
+{
+  "tasks": {
+    "dev": {
+      "cache": false,
+      "persistent": true
+    },
+    "build": {
+      "dependsOn": ["^build"]
+    },
+    "test": {
+      "dependsOn": ["^build"]
+    }
+  }
+}
+```
+
+### Benefits
+
+1. **Unified Development**: Start both frontend and backend with one command
+2. **Shared Tools**: Common linting, formatting, and CI/CD configurations
+3. **Incremental Builds**: Only rebuild what changed
+4. **Better DX**: Consistent workflows across the entire stack
 
 ## 📚 Additional Resources
 
 ### Learning Resources
 
+**Monorepo & Build Tools:**
+- [Turborepo Documentation](https://turbo.build/repo/docs)
+- [npm Workspaces](https://docs.npmjs.com/cli/v8/using-npm/workspaces)
+- [Monorepo Best Practices](https://monorepo.tools/)
+
+**Frontend:**
+- [Next.js 15 Documentation](https://nextjs.org/docs)
+- [React 19 Documentation](https://react.dev/)
+- [Tailwind CSS v4](https://tailwindcss.com/)
+- [Radix UI](https://www.radix-ui.com/)
+- [TanStack Query](https://tanstack.com/query/latest)
+
+**Backend:**
 - [FastAPI Documentation](https://fastapi.tiangolo.com/)
 - [Google Gemini AI](https://ai.google.dev/)
 - [SQLAlchemy Guide](https://docs.sqlalchemy.org/)
 - [Pydantic Documentation](https://docs.pydantic.dev/)
 - [UV Package Manager](https://docs.astral.sh/uv/)
+- [Alembic Migrations](https://alembic.sqlalchemy.org/)
+
+**Testing:**
+- [pytest Documentation](https://docs.pytest.org/)
+- [FastAPI Testing](https://fastapi.tiangolo.com/tutorial/testing/)
+- [React Testing Library](https://testing-library.com/react)
 
 ### Related Projects
 
@@ -656,6 +1088,22 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 Built with amazing open-source technologies:
 
+**Monorepo & Build Tools:**
+- **[Turborepo](https://turbo.build/)** - High-performance build system for monorepos
+- **[npm Workspaces](https://docs.npmjs.com/)** - Dependency management for monorepos
+
+**Frontend Stack:**
+- **[Next.js](https://nextjs.org/)** - The React framework for production
+- **[React](https://react.dev/)** - A JavaScript library for building user interfaces
+- **[TypeScript](https://www.typescriptlang.org/)** - Typed superset of JavaScript
+- **[Tailwind CSS](https://tailwindcss.com/)** - Utility-first CSS framework
+- **[Radix UI](https://www.radix-ui.com/)** - Unstyled, accessible UI components
+- **[TanStack Query](https://tanstack.com/query/)** - Powerful data synchronization
+- **[Zustand](https://zustand-demo.pmnd.rs/)** - State management
+- **[Recharts](https://recharts.org/)** - Composable charting library
+- **[Framer Motion](https://www.framer.com/motion/)** - Animation library
+
+**Backend Stack:**
 - **[FastAPI](https://fastapi.tiangolo.com/)** - Modern, fast web framework for Python
 - **[Google Gemini](https://ai.google.dev/)** - Advanced AI and machine learning
 - **[PostgreSQL](https://www.postgresql.org/)** - Powerful open-source database
@@ -664,19 +1112,34 @@ Built with amazing open-source technologies:
 - **[UV](https://docs.astral.sh/uv/)** - Lightning-fast Python package installer
 - **[Celery](https://docs.celeryq.dev/)** - Distributed task queue
 - **[Redis](https://redis.io/)** - In-memory data structure store
+- **[Alembic](https://alembic.sqlalchemy.org/)** - Database migration tool
+
+**Data & ML:**
 - **[scikit-learn](https://scikit-learn.org/)** - Machine learning in Python
 - **[Pandas](https://pandas.pydata.org/)** - Data analysis and manipulation tool
+- **[NumPy](https://numpy.org/)** - Fundamental package for scientific computing
 - **[Plotly](https://plotly.com/)** - Interactive graphing library
+- **[Matplotlib](https://matplotlib.org/)** - Visualization with Python
+
+**DevOps & Testing:**
+- **[Docker](https://www.docker.com/)** - Containerization platform
+- **[pytest](https://pytest.org/)** - Python testing framework
+- **[Prometheus](https://prometheus.io/)** - Monitoring and alerting toolkit
 
 ## 📊 Project Stats
 
-- **Language**: Python 3.13+
-- **Framework**: FastAPI
-- **Database**: PostgreSQL with asyncpg
+- **Architecture**: Turborepo Monorepo
+- **Frontend**: Next.js 15, React 19, TypeScript 5, Tailwind CSS v4
+- **Backend**: FastAPI, Python 3.13+
+- **Database**: PostgreSQL with asyncpg (SQLite for dev)
 - **AI/ML**: Google Gemini, scikit-learn
-- **Architecture**: Async/await, RESTful API
-- **Code Style**: Black, isort, flake8
-- **Testing**: pytest with coverage
+- **State Management**: Zustand, TanStack Query
+- **UI Components**: Radix UI, Custom components
+- **Styling**: Tailwind CSS v4, Framer Motion
+- **Build System**: Turborepo with npm workspaces
+- **Package Managers**: npm (frontend), UV (backend)
+- **Code Quality**: Black, isort, flake8 (Python); ESLint (TypeScript)
+- **Testing**: pytest (backend), Jest/Vitest planned (frontend)
 
 ---
 
