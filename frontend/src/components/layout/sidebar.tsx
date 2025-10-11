@@ -15,6 +15,8 @@ import {
   Settings,
   ChevronLeft,
   ChevronRight,
+  Activity,
+  Zap,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useSidebarStore } from '@/store'
@@ -23,7 +25,9 @@ const navigation = [
   { name: 'Dashboard', href: '/', icon: LayoutDashboard },
   { name: 'Projects', href: '/projects', icon: FolderKanban },
   { name: 'Risk Analysis', href: '/risks', icon: AlertTriangle },
+  { name: 'Anomalies', href: '/anomalies', icon: Activity },
   { name: 'AI Insights', href: '/ai-insights', icon: Brain },
+  { name: 'ML Predictions', href: '/ml-predictions', icon: Zap },
   { name: 'Bug Tracker', href: '/bugs', icon: Bug },
   { name: 'Resources', href: '/resources', icon: Users },
   { name: 'Cost Forecasting', href: '/costs', icon: DollarSign },

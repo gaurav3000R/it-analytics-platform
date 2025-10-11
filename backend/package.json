@@ -9,6 +9,10 @@
     "clean": "rm -rf .venv",
     "jupyter:lab": ". .venv/bin/activate && jupyter lab --ip=127.0.0.1 --port=8888 --no-browser",
     "jupyter:notebook": ". .venv/bin/activate && jupyter notebook --ip=127.0.0.1 --port=8888 --no-browser",
-    "jupyter": "npm run jupyter:lab"
+    "jupyter": "npm run jupyter:lab",
+    "kill": "pkill -f 'uvicorn' && echo '✅ Backend server stopped' || echo '✅ Backend not running'",
+    "kill:port": "lsof -ti:8000 | xargs kill -9 2>/dev/null && echo '✅ Port 8000 freed' || echo '✅ Port 8000 already free'",
+    "kill:jupyter": "pkill -f 'jupyter' && echo '✅ Jupyter stopped' || echo '✅ Jupyter not running'",
+    "status": "ps aux | grep 'uvicorn' | grep -v grep || echo 'Backend not running'"
   }
 }

@@ -8,7 +8,10 @@
     "start": "next start",
     "lint": "next lint",
     "test": "echo 'No tests in frontend yet'",
-    "clean": "rm -rf .next node_modules"
+    "clean": "rm -rf .next node_modules",
+    "kill": "pkill -f 'next dev' && echo '✅ Frontend server stopped' || echo '✅ Frontend not running'",
+    "kill:port": "lsof -ti:3000 | xargs kill -9 2>/dev/null && echo '✅ Port 3000 freed' || echo '✅ Port 3000 already free'",
+    "status": "ps aux | grep 'next dev' | grep -v grep || echo 'Frontend not running'"
   },
   "dependencies": {
     "@radix-ui/react-avatar": "^1.1.3",
