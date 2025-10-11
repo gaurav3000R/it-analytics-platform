@@ -1,3 +1,6 @@
+"""
+Enhanced main entry point with comprehensive setup for Supabase
+"""
 from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
@@ -6,7 +9,16 @@ import uvicorn
 
 from app.config import settings
 from app.database import get_db, init_db
-from app.api import projects, risks, analytics, ai_insights, bug_tracker, resource_utilization, cost_forecasting
+from app.api import (
+    projects, 
+    risks, 
+    analytics, 
+    ai_insights, 
+    bug_tracker, 
+    resource_utilization, 
+    cost_forecasting,
+    risk_dashboard
+)
 from app.middleware import MonitoringMiddleware, metrics_endpoint
 from datetime import datetime, timedelta
 
@@ -52,7 +64,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title=settings.PROJECT_NAME,
     version=settings.VERSION,
-    description="AI-Powered Early Warning System for IT Services Projects with Gemini AI Integration (Supabase Backend)",
+    description="AI-Powered Early Warning System for IT Services Projects with Risk Prediction Dashboard (Supabase Backend)",
     lifespan=lifespan
 )
 
@@ -76,6 +88,7 @@ app.include_router(ai_insights.router, prefix=settings.API_V1_STR)
 app.include_router(bug_tracker.router, prefix=settings.API_V1_STR)
 app.include_router(resource_utilization.router, prefix=settings.API_V1_STR)
 app.include_router(cost_forecasting.router, prefix=settings.API_V1_STR)
+app.include_router(risk_dashboard.router, prefix=settings.API_V1_STR)
 
 # Monitoring endpoints
 app.add_route("/metrics", metrics_endpoint)
@@ -90,6 +103,7 @@ async def root():
         "database": "Supabase",
         "features": {
             "risk_prediction": True,
+            "risk_dashboard": True,
             "anomaly_detection": True,
             "csv_data_loading": True,
             "gemini_ai_insights": bool(settings.GOOGLE_API_KEY),
@@ -108,10 +122,10 @@ async def health_check():
     supabase_status = "not_configured"
     if settings.SUPABASE_URL and settings.SUPABASE_KEY:
         try:
-            db = get_db()
+            db = next(get_db())
             # Simple query to test connection
             result = db.table('projects').select("id").limit(1).execute()
-            supabase_status = "connected" if result.data else "connected_no_data"
+            supabase_status = "connected" if result.data is not None else "connected_no_data"
         except Exception as e:
             supabase_status = f"error: {str(e)}"
             logger.error(f"Supabase health check failed: {str(e)}")
