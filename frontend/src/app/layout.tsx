@@ -1,33 +1,22 @@
 import type { Metadata } from "next";
-import { Inter, Poppins, Space_Grotesk, JetBrains_Mono } from "next/font/google";
+import { Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { Providers } from "./providers";
 import { Toaster } from "react-hot-toast";
 
-// Modern, professional fonts for a futuristic look
+// Modern Inter font for clean, professional design
 const inter = Inter({
   subsets: ["latin"],
   variable: "--font-inter",
   display: 'swap',
-});
-
-const poppins = Poppins({
-  weight: ['300', '400', '500', '600', '700'],
-  subsets: ["latin"],
-  variable: "--font-poppins",
-  display: 'swap',
-});
-
-const spaceGrotesk = Space_Grotesk({
-  subsets: ["latin"],
-  variable: "--font-space-grotesk",
-  display: 'swap',
+  weight: ['300', '400', '500', '600', '700', '800', '900'],
 });
 
 const jetbrainsMono = JetBrains_Mono({
   subsets: ["latin"],
   variable: "--font-jetbrains-mono",
   display: 'swap',
+  weight: ['400', '500', '600', '700'],
 });
 
 export const metadata: Metadata = {
@@ -42,8 +31,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark">
-      <body className={`${inter.variable} ${poppins.variable} ${spaceGrotesk.variable} ${jetbrainsMono.variable} antialiased`}>
+    <html lang="en" className="light">
+      <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+      </head>
+      <body className={`${inter.variable} ${jetbrainsMono.variable} antialiased font-sans`}>
         <Providers>
           {children}
           <Toaster
@@ -51,22 +44,29 @@ export default function RootLayout({
             toastOptions={{
               duration: 4000,
               style: {
-                background: 'rgba(30, 41, 59, 0.95)',
-                color: '#fff',
+                background: '#ffffff',
+                color: '#111827',
                 backdropFilter: 'blur(10px)',
-                border: '1px rgba(168, 85, 247, 0.3)',
+                border: '1px solid #e5e7eb',
                 borderRadius: '12px',
+                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
               },
               success: {
                 iconTheme: {
                   primary: '#10b981',
                   secondary: '#fff',
                 },
+                style: {
+                  border: '1px solid #10b981',
+                },
               },
               error: {
                 iconTheme: {
                   primary: '#ef4444',
                   secondary: '#fff',
+                },
+                style: {
+                  border: '1px solid #ef4444',
                 },
               },
             }}
