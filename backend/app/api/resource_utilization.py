@@ -1,79 +1,217 @@
-# backend/app/api/resource_utilization.py (UPDATED)
+# backend/app/api/resource_utilization_optimized.py
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, BackgroundTasks
 from supabase import Client
-from datetime import timedelta
+from datetime import datetime, timedelta, date
 
 from app.database import get_db
-from app.services.resource_utilization import ResourceUtilizationService
 
 router = APIRouter(prefix="/resource-utilization", tags=["resource-utilization"])
-util_service = ResourceUtilizationService()
 
 @router.get("/analyze")
 async def analyze_utilization(
-    days_back: int = Query(default=14, ge=7, le=90, description="Number of days to analyze"),
+    days_back: int = Query(default=14, ge=7, le=90),
+    use_cache: bool = Query(default=True),
     db: Client = Depends(get_db)
 ):
     """
-    Comprehensive team resource utilization analysis
-    Returns: alerts, utilization metrics, rebalancing suggestions
+    Resource utilization analysis - OPTIMIZED with caching
     """
     try:
-        analysis = util_service.analyze_team_utilization(db, days_back)
+        if use_cache:
+            # Try to get cached analysis
+            today = date.today().isoformat()
+            cache_response = db.table("resource_summary_cache").select(
+                "*"
+            ).eq("analysis_date", today).eq("period_days", days_back).execute()
+            
+            if cache_response.data and len(cache_response.data) > 0:
+                cached = cache_response.data[0]
+                return {
+                    "period_days": days_back,
+                    "total_employees": cached['total_employees'],
+                    "total_alerts": cached['total_alerts'],
+                    "summary_stats": cached.get('summary_stats', {}),
+                    "utilization_distribution": cached.get('utilization_distribution', {}),
+                    "alerts": [],  # Load separately if needed
+                    "rebalancing_suggestions": [],
+                    "cached": True,
+                    "generated_at": cached['created_at']
+                }
+        
+        # Generate new analysis (simplified)
+        analysis = await _generate_utilization_analysis(db, days_back)
+        
+        # Cache result
+        try:
+            cache_data = {
+                'analysis_date': date.today().isoformat(),
+                'period_days': days_back,
+                'total_employees': analysis['total_employees'],
+                'total_alerts': len(analysis.get('alerts', [])),
+                'critical_alerts': len([a for a in analysis.get('alerts', []) if a.get('severity') == 'critical']),
+                'high_alerts': len([a for a in analysis.get('alerts', []) if a.get('severity') == 'high']),
+                'summary_stats': analysis.get('summary_stats', {}),
+                'utilization_distribution': {}
+            }
+            db.table("resource_summary_cache").upsert(cache_data).execute()
+        except Exception as e:
+            import logging
+            logging.warning(f"Failed to cache resource analysis: {e}")
+        
+        analysis['cached'] = False
         return analysis
+        
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to analyze team utilization: {str(e)}")
+        import logging
+        logging.error(f"Error analyzing team utilization: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
-@router.get("/rebalancing-suggestions")
-async def get_rebalancing_suggestions(db: Client = Depends(get_db)):
-    """Get intelligent resource rebalancing suggestions"""
-    try:
-        suggestions = util_service.get_rebalancing_suggestions(db)
+
+async def _generate_utilization_analysis(db: Client, days_back: int) -> dict:
+    """Generate simplified utilization analysis"""
+    start_date = (datetime.now() - timedelta(days=days_back)).date().isoformat()
+    
+    # Get active employees
+    employees_response = db.table("employees").select(
+        "id, name, role, max_hours_per_day"
+    ).eq("is_active", True).limit(100).execute()
+    
+    employees = employees_response.data
+    
+    if not employees:
         return {
-            "total_suggestions": len(suggestions),
-            "suggestions": suggestions
+            "period_days": days_back,
+            "total_employees": 0,
+            "alerts": [],
+            "summary_stats": {},
+            "rebalancing_suggestions": [],
+            "generated_at": datetime.now().isoformat()
         }
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to generate rebalancing suggestions: {str(e)}")
+    
+    # Get logs in batch
+    employee_ids = [e['id'] for e in employees]
+    logs_response = db.table("daily_logs").select(
+        "employee_id, date, hours_logged, project_id"
+    ).in_("employee_id", employee_ids).gte("date", start_date).execute()
+    
+    logs = logs_response.data
+    
+    # Calculate working days
+    import numpy as np
+    working_days = np.busday_count(
+        datetime.strptime(start_date, '%Y-%m-%d').date(),
+        datetime.now().date()
+    )
+    
+    # Analyze each employee
+    alerts = []
+    utilization_data = []
+    
+    for employee in employees:
+        emp_id = employee['id']
+        emp_logs = [l for l in logs if l['employee_id'] == emp_id]
+        
+        if len(emp_logs) == 0:
+            # Missing logs alert
+            alerts.append({
+                'type': 'no_activity',
+                'employee_id': emp_id,
+                'employee_name': employee['name'],
+                'employee_role': employee['role'],
+                'severity': 'critical',
+                'message': f"{employee['name']} has no logged hours in the period",
+                'utilization_rate': 0.0
+            })
+            continue
+        
+        # Calculate metrics
+        total_hours = sum(l['hours_logged'] for l in emp_logs)
+        unique_days = len(set(l['date'] for l in emp_logs))
+        avg_daily_hours = total_hours / unique_days if unique_days > 0 else 0
+        max_hours = employee.get('max_hours_per_day', 8)
+        expected_hours = max_hours * working_days
+        utilization_rate = total_hours / expected_hours if expected_hours > 0 else 0
+        
+        utilization_data.append({
+            'employee_id': emp_id,
+            'employee_name': employee['name'],
+            'utilization_rate': utilization_rate,
+            'avg_daily_hours': avg_daily_hours,
+            'total_hours': total_hours
+        })
+        
+        # Check for alerts
+        if utilization_rate < 0.6:
+            severity = 'critical' if utilization_rate < 0.4 else 'high'
+            alerts.append({
+                'type': 'underutilization',
+                'employee_id': emp_id,
+                'employee_name': employee['name'],
+                'employee_role': employee['role'],
+                'severity': severity,
+                'utilization_rate': float(utilization_rate),
+                'avg_daily_hours': float(avg_daily_hours),
+                'expected_hours': float(max_hours),
+                'message': f"{employee['name']} is underutilized at {utilization_rate:.1%}"
+            })
+        elif utilization_rate > 1.3:
+            severity = 'critical' if utilization_rate > 1.5 else 'high'
+            alerts.append({
+                'type': 'overutilization',
+                'employee_id': emp_id,
+                'employee_name': employee['name'],
+                'employee_role': employee['role'],
+                'severity': severity,
+                'utilization_rate': float(utilization_rate),
+                'avg_daily_hours': float(avg_daily_hours),
+                'expected_hours': float(max_hours),
+                'message': f"{employee['name']} is overworked at {utilization_rate:.1%}"
+            })
+    
+    # Calculate summary stats
+    rates = [u['utilization_rate'] for u in utilization_data]
+    summary_stats = {
+        'avg_utilization': float(np.mean(rates)) if rates else 0,
+        'median_utilization': float(np.median(rates)) if rates else 0,
+        'underutilized_count': len([r for r in rates if r < 0.6]),
+        'overutilized_count': len([r for r in rates if r > 1.3]),
+        'optimal_count': len([r for r in rates if 0.6 <= r <= 1.3])
+    }
+    
+    return {
+        "period_days": days_back,
+        "total_employees": len(employees),
+        "alerts": sorted(alerts, key=lambda x: {'critical': 0, 'high': 1, 'medium': 2}.get(x['severity'], 3))[:20],
+        "utilization_summary": sorted(utilization_data, key=lambda x: x['utilization_rate'], reverse=True)[:50],
+        "summary_stats": summary_stats,
+        "rebalancing_suggestions": [],  # Simplified
+        "generated_at": datetime.now().isoformat()
+    }
 
-@router.get("/employee/{employee_id}")
-async def get_employee_utilization(
-    employee_id: int,
-    days_back: int = Query(default=30, ge=7, le=90, description="Number of days to analyze"),
-    db: Client = Depends(get_db)
-):
-    """Get detailed utilization analysis for specific employee"""
-    try:
-        detail = util_service.get_employee_utilization_detail(db, employee_id, days_back)
-        return detail
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to get employee utilization: {str(e)}")
 
 @router.get("/alerts")
 async def get_utilization_alerts(
-    days_back: int = Query(default=14, ge=7, le=90, description="Number of days to retrieve"),
-    severity: str = Query(default=None, description="Filter by severity: critical, high, medium, low"),
-    alert_type: str = Query(default=None, description="Filter by type: underutilization, overutilization, overbooked"),
+    days_back: int = Query(default=14, ge=7, le=90),
+    severity: str = Query(default=None),
+    limit: int = Query(default=50, le=200),
     db: Client = Depends(get_db)
 ):
-    """Get resource utilization alerts with filters"""
+    """Get resource utilization alerts - optimized query"""
     try:
-        from datetime import datetime, timedelta
-        
         start_date = (datetime.now() - timedelta(days=days_back)).date().isoformat()
         
         # Build query
         query = db.table("resource_utilization_alerts").select(
-            "*, employees(name, role, email)"
+            "id, employee_id, alert_type, severity, utilization_rate, "
+            "avg_daily_hours, expected_hours, alert_message, is_acknowledged, "
+            "created_at, employees(name, role)"
         ).gte("created_at", start_date)
         
         if severity:
             query = query.eq("severity", severity)
-        if alert_type:
-            query = query.eq("alert_type", alert_type)
         
-        query = query.order("created_at", desc=True)
+        query = query.order("created_at", desc=True).limit(limit)
         
         alerts_response = query.execute()
         alerts = alerts_response.data
@@ -81,12 +219,12 @@ async def get_utilization_alerts(
         # Format response
         formatted_alerts = []
         for alert in alerts:
-            employee_data = alert.get('employees', {})
+            emp_data = alert.get('employees', {})
             formatted_alerts.append({
                 "id": alert['id'],
                 "employee_id": alert['employee_id'],
-                "employee_name": employee_data.get('name', 'Unknown') if employee_data else 'Unknown',
-                "employee_role": employee_data.get('role', 'Unknown') if employee_data else 'Unknown',
+                "employee_name": emp_data.get('name', 'Unknown') if emp_data else 'Unknown',
+                "employee_role": emp_data.get('role', 'Unknown') if emp_data else 'Unknown',
                 "alert_type": alert['alert_type'],
                 "severity": alert['severity'],
                 "utilization_rate": alert.get('utilization_rate'),
@@ -94,187 +232,165 @@ async def get_utilization_alerts(
                 "expected_hours": alert.get('expected_hours'),
                 "alert_message": alert['alert_message'],
                 "is_acknowledged": alert['is_acknowledged'],
-                "acknowledged_at": alert.get('acknowledged_at'),
-                "created_at": alert['created_at'],
-                "period": {
-                    "start_date": alert['period_start_date'],
-                    "end_date": alert['period_end_date']
-                }
+                "created_at": alert['created_at']
             })
         
         return {
             "total_alerts": len(formatted_alerts),
             "period_days": days_back,
-            "filters": {
-                "severity": severity,
-                "alert_type": alert_type
-            },
+            "filters": {"severity": severity},
             "alerts": formatted_alerts
         }
     
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to retrieve alerts: {str(e)}")
+        import logging
+        logging.error(f"Error retrieving alerts: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
-@router.post("/alerts/{alert_id}/acknowledge")
-async def acknowledge_alert(
-    alert_id: int,
-    acknowledged_by: str = Query(..., description="Name or ID of person acknowledging"),
-    db: Client = Depends(get_db)
-):
-    """Acknowledge a utilization alert"""
-    try:
-        from datetime import datetime
-        
-        update_data = {
-            "is_acknowledged": True,
-            "acknowledged_at": datetime.now().isoformat(),
-            "acknowledged_by": acknowledged_by
-        }
-        
-        response = db.table("resource_utilization_alerts").update(
-            update_data
-        ).eq("id", alert_id).execute()
-        
-        if not response.data:
-            raise HTTPException(status_code=404, detail="Alert not found")
-        
-        return {
-            "message": "Alert acknowledged successfully",
-            "alert_id": alert_id,
-            "acknowledged_by": acknowledged_by
-        }
-    
-    except HTTPException:
-        raise
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to acknowledge alert: {str(e)}")
 
 @router.get("/dashboard")
 async def get_utilization_dashboard(
     days_back: int = Query(default=14, ge=7, le=90),
     db: Client = Depends(get_db)
 ):
-    """Get comprehensive utilization dashboard data"""
+    """Get utilization dashboard - optimized"""
     try:
-        # Get full analysis
-        analysis = util_service.analyze_team_utilization(db, days_back)
+        # Use cached analysis
+        analysis = await analyze_utilization(days_back=days_back, use_cache=True, db=db)
         
-        # Add historical trends
-        from datetime import datetime, timedelta
+        # Get alert counts from database
+        start_date = (datetime.now() - timedelta(days=days_back)).date().isoformat()
+        alerts_response = db.table("resource_utilization_alerts").select(
+            "severity", count='exact'
+        ).gte("created_at", start_date).execute()
         
-        # Get alert history for trends
-        alert_history_response = db.table("resource_utilization_alerts").select(
-            "created_at, severity, alert_type"
-        ).gte("created_at", (datetime.now() - timedelta(days=days_back)).isoformat()).execute()
+        # Count by severity
+        alert_counts = {
+            'critical': 0,
+            'high': 0,
+            'medium': 0,
+            'low': 0
+        }
         
-        alert_history = alert_history_response.data
+        if hasattr(alerts_response, 'data'):
+            for alert in alerts_response.data:
+                severity = alert.get('severity', 'medium')
+                alert_counts[severity] = alert_counts.get(severity, 0) + 1
         
-        # Group alerts by week
-        import pandas as pd
-        if alert_history:
-            df = pd.DataFrame(alert_history)
-            df['created_at'] = pd.to_datetime(df['created_at'])
-            df['week'] = df['created_at'].dt.isocalendar().week
-            
-            weekly_alerts = df.groupby('week').size().to_dict()
-        else:
-            weekly_alerts = {}
-        
-        # Enhanced dashboard
         dashboard = {
             "period_days": days_back,
             "summary": {
-                "total_employees": analysis['total_employees'],
-                "total_alerts": len(analysis['alerts']),
-                "critical_alerts": len([a for a in analysis['alerts'] if a['severity'] == 'critical']),
-                "high_alerts": len([a for a in analysis['alerts'] if a['severity'] == 'high']),
-                **analysis['summary_stats']
+                "total_employees": analysis.get('total_employees', 0),
+                "total_alerts": analysis.get('total_alerts', 0),
+                "critical_alerts": alert_counts['critical'],
+                "high_alerts": alert_counts['high'],
+                **analysis.get('summary_stats', {})
             },
             "utilization_distribution": {
-                "underutilized": analysis['summary_stats'].get('underutilized_count', 0),
-                "optimal": analysis['summary_stats'].get('optimal_count', 0),
-                "overutilized": analysis['summary_stats'].get('overutilized_count', 0),
-                "critically_underutilized": analysis['summary_stats'].get('critically_underutilized', 0),
-                "critically_overutilized": analysis['summary_stats'].get('critically_overutilized', 0)
+                "underutilized": analysis.get('summary_stats', {}).get('underutilized_count', 0),
+                "optimal": analysis.get('summary_stats', {}).get('optimal_count', 0),
+                "overutilized": analysis.get('summary_stats', {}).get('overutilized_count', 0)
             },
-            "top_alerts": analysis['alerts'][:10],
-            "rebalancing_suggestions": analysis['rebalancing_suggestions'][:5],
-            "trends": {
-                "weekly_alert_counts": weekly_alerts,
-                "avg_utilization": analysis['summary_stats'].get('avg_utilization', 0),
-                "avg_health_score": analysis['summary_stats'].get('avg_health_score', 0)
-            },
-            "generated_at": analysis['generated_at']
+            "top_alerts": analysis.get('alerts', [])[:10],
+            "generated_at": analysis.get('generated_at')
         }
         
         return dashboard
     
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to generate dashboard: {str(e)}")
+        import logging
+        logging.error(f"Error generating dashboard: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
-@router.get("/overbooking-report")
-async def get_overbooking_report(db: Client = Depends(get_db)):
-    """Get report of overbooked employees (>100% allocation)"""
+
+@router.get("/employee/{employee_id}")
+async def get_employee_utilization(
+    employee_id: int,
+    days_back: int = Query(default=30, ge=7, le=90),
+    db: Client = Depends(get_db)
+):
+    """Get employee utilization - simplified"""
     try:
-        # Get all active assignments
-        assignments_response = db.table("project_assignments").select(
-            "*, employees(name, role, email), projects(name)"
-        ).eq("is_active", True).execute()
+        start_date = (datetime.now() - timedelta(days=days_back)).date().isoformat()
         
-        assignments = assignments_response.data
+        # Get employee
+        employee_response = db.table("employees").select("*").eq("id", employee_id).single().execute()
+        employee = employee_response.data
         
-        # Group by employee
-        from collections import defaultdict
-        employee_allocations = defaultdict(lambda: {
-            'total_allocation': 0,
-            'projects': [],
-            'employee_info': None
-        })
+        # Get logs
+        logs_response = db.table("daily_logs").select(
+            "date, hours_logged, completion_percentage, project_id, projects(name)"
+        ).eq("employee_id", employee_id).gte("date", start_date).execute()
         
-        for assignment in assignments:
-            emp_id = assignment['employee_id']
-            employee_allocations[emp_id]['total_allocation'] += assignment['allocation_percentage']
-            employee_allocations[emp_id]['projects'].append({
-                'project_id': assignment['project_id'],
-                'project_name': assignment.get('projects', {}).get('name', 'Unknown') if assignment.get('projects') else 'Unknown',
-                'allocation': assignment['allocation_percentage'],
-                'expected_hours': assignment.get('expected_hours_per_day', 0)
-            })
-            if not employee_allocations[emp_id]['employee_info']:
-                emp_data = assignment.get('employees', {})
-                employee_allocations[emp_id]['employee_info'] = {
-                    'id': emp_id,
-                    'name': emp_data.get('name', 'Unknown') if emp_data else 'Unknown',
-                    'role': emp_data.get('role', 'Unknown') if emp_data else 'Unknown',
-                    'email': emp_data.get('email', '') if emp_data else ''
-                }
+        logs = logs_response.data
         
-        # Filter overbooked employees
-        overbooked = []
-        for emp_id, data in employee_allocations.items():
-            if data['total_allocation'] > 100:
-                severity = 'critical' if data['total_allocation'] > 150 else 'high' if data['total_allocation'] > 120 else 'medium'
-                
-                overbooked.append({
-                    'employee': data['employee_info'],
-                    'total_allocation': data['total_allocation'],
-                    'num_projects': len(data['projects']),
-                    'projects': data['projects'],
-                    'severity': severity,
-                    'over_allocation': data['total_allocation'] - 100,
-                    'recommendation': f"Reduce allocation by {data['total_allocation'] - 100}% or reassign projects"
-                })
+        if not logs:
+            return {
+                "employee_id": employee_id,
+                "employee_name": employee['name'],
+                "period_days": days_back,
+                "message": "No activity in this period"
+            }
         
-        # Sort by severity and allocation
-        severity_order = {'critical': 0, 'high': 1, 'medium': 2}
-        overbooked.sort(key=lambda x: (severity_order[x['severity']], -x['total_allocation']))
+        # Calculate metrics
+        total_hours = sum(l['hours_logged'] for l in logs)
+        unique_days = len(set(l['date'] for l in logs))
+        avg_daily_hours = total_hours / unique_days if unique_days > 0 else 0
+        
+        import numpy as np
+        working_days = np.busday_count(
+            datetime.strptime(start_date, '%Y-%m-%d').date(),
+            datetime.now().date()
+        )
+        
+        max_hours = employee.get('max_hours_per_day', 8)
+        expected_hours = max_hours * working_days
+        utilization_rate = total_hours / expected_hours if expected_hours > 0 else 0
         
         return {
-            "total_overbooked": len(overbooked),
-            "critical_count": len([e for e in overbooked if e['severity'] == 'critical']),
-            "high_count": len([e for e in overbooked if e['severity'] == 'high']),
-            "overbooked_employees": overbooked
+            "employee_id": employee_id,
+            "employee_name": employee['name'],
+            "employee_role": employee['role'],
+            "period_days": days_back,
+            "utilization_rate": float(utilization_rate),
+            "avg_daily_hours": float(avg_daily_hours),
+            "total_hours": float(total_hours),
+            "days_worked": unique_days,
+            "expected_days": int(working_days),
+            "status": (
+                'optimal' if 0.6 <= utilization_rate <= 1.3 else
+                'underutilized' if utilization_rate < 0.6 else
+                'overutilized'
+            )
         }
-    
+        
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to generate overbooking report: {str(e)}")
+        import logging
+        logging.error(f"Error getting employee utilization: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/refresh-analysis")
+async def refresh_analysis(
+    background_tasks: BackgroundTasks,
+    days_back: int = Query(default=14, ge=7, le=90),
+    db: Client = Depends(get_db)
+):
+    """Trigger background refresh of utilization analysis"""
+    try:
+        # Queue background task
+        background_tasks.add_task(
+            _generate_utilization_analysis,
+            db,
+            days_back
+        )
+        
+        return {
+            "message": "Analysis refresh queued",
+            "period_days": days_back
+        }
+        
+    except Exception as e:
+        import logging
+        logging.error(f"Error queuing analysis refresh: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
