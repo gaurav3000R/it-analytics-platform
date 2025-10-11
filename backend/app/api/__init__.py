@@ -5,6 +5,7 @@ from .cost_forecasting import router as cost_forecasting_router
 from .projects import router as projects_router
 from .resource_utilization import router as resource_utilization_router
 from .risks import router as risks_router
+from .risk_dashboard import router as risk_dashboard_router
 
 __all__ = [
     "ai_insights_router",
@@ -13,5 +14,6 @@ __all__ = [
     "cost_forecasting_router",
     "projects_router",
     "resource_utilization_router",
-    "risks_router"
+    "risks_router",
+    "risk_dashboard_router"
 ]
