@@ -87,16 +87,16 @@ export default function EmployeeDetailPage() {
     <DashboardLayout>
       <div className="space-y-6">
         {/* Employee Header */}
-        <Card className="border-2 border-blue-500/20 bg-gradient-to-r from-blue-500/5 to-cyan-500/5">
+        <Card className="border-2 border-blue-100 bg-blue-50/30">
           <CardContent className="p-8">
             <div className="flex items-start justify-between">
               <div className="flex items-center gap-6">
-                <div className="w-24 h-24 rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center">
-                  <User className="h-12 w-12 text-white" />
+                <div className="w-24 h-24 rounded-full bg-blue-100 border-2 border-blue-200 flex items-center justify-center">
+                  <User className="h-12 w-12 text-blue-600" />
                 </div>
                 <div>
-                  <h1 className="text-4xl font-bold mb-2">{employee.name || `Employee ${employeeId}`}</h1>
-                  <div className="flex items-center gap-4 text-gray-400">
+                  <h1 className="text-4xl font-bold text-gray-900 mb-2">{employee.name || `Employee ${employeeId}`}</h1>
+                  <div className="flex items-center gap-4 text-gray-600">
                     <div className="flex items-center gap-2">
                       <Briefcase className="h-4 w-4" />
                       <span>{employee.role || 'N/A'}</span>
@@ -110,10 +110,10 @@ export default function EmployeeDetailPage() {
                     <Badge
                       className={
                         utilization.status === 'optimal'
-                          ? 'bg-green-500/20 text-green-400'
+                          ? 'bg-green-100 text-green-700 border-green-200'
                           : utilization.status === 'overutilized'
-                            ? 'bg-red-500/20 text-red-400'
-                            : 'bg-yellow-500/20 text-yellow-400'
+                            ? 'bg-red-100 text-red-700 border-red-200'
+                            : 'bg-amber-100 text-amber-700 border-amber-200'
                       }
                     >
                       {utilization.status || 'Unknown'}
@@ -126,8 +126,8 @@ export default function EmployeeDetailPage() {
               </div>
 
               <div className="text-right">
-                <p className="text-gray-400 text-sm mb-2">Utilization Rate</p>
-                <p className="text-5xl font-bold text-blue-400">
+                <p className="text-gray-600 text-sm mb-2 font-medium">Utilization Rate</p>
+                <p className="text-5xl font-bold text-blue-600">
                   {((utilization.utilization_rate || 0) * 100).toFixed(0)}%
                 </p>
               </div>
@@ -142,28 +142,36 @@ export default function EmployeeDetailPage() {
               title: 'Active Projects',
               value: projects.length,
               icon: Target,
-              color: 'from-blue-500 to-cyan-500',
+              bgColor: 'bg-blue-50/80',
+              borderColor: 'border-blue-100',
+              iconColor: 'text-blue-600',
               description: 'Currently assigned',
             },
             {
               title: 'Avg Daily Hours',
               value: (utilization.avg_daily_hours || 0).toFixed(1),
               icon: Clock,
-              color: 'from-purple-500 to-pink-500',
+              bgColor: 'bg-purple-50/80',
+              borderColor: 'border-purple-100',
+              iconColor: 'text-purple-600',
               description: `Expected: ${utilization.expected_hours || 8}h`,
             },
             {
               title: 'Total Hours (30d)',
               value: (utilization.total_hours_30d || 0).toFixed(0),
               icon: Activity,
-              color: 'from-green-500 to-emerald-500',
+              bgColor: 'bg-green-50/80',
+              borderColor: 'border-green-100',
+              iconColor: 'text-green-600',
               description: 'Last 30 days',
             },
             {
               title: 'Anomalies',
               value: anomalies.length,
               icon: AlertTriangle,
-              color: 'from-red-500 to-orange-500',
+              bgColor: 'bg-red-50/80',
+              borderColor: 'border-red-100',
+              iconColor: 'text-red-600',
               description: 'Detected issues',
             },
           ].map((stat, i) => (
@@ -175,11 +183,11 @@ export default function EmployeeDetailPage() {
             >
               <Card hover glow>
                 <CardContent className="p-6">
-                  <div className={`p-3 rounded-xl bg-gradient-to-br ${stat.color} bg-opacity-20 mb-4 inline-block`}>
-                    <stat.icon className="h-6 w-6" />
+                  <div className={`p-3 rounded-xl ${stat.bgColor} border ${stat.borderColor} mb-4 inline-block`}>
+                    <stat.icon className={`h-6 w-6 ${stat.iconColor}`} />
                   </div>
-                  <h3 className="text-gray-400 text-sm mb-1">{stat.title}</h3>
-                  <p className="text-3xl font-bold mb-1">{stat.value}</p>
+                  <h3 className="text-gray-600 text-sm mb-1 font-medium">{stat.title}</h3>
+                  <p className="text-3xl font-bold text-gray-900 mb-1">{stat.value}</p>
                   <p className="text-xs text-gray-500">{stat.description}</p>
                 </CardContent>
               </Card>
@@ -255,7 +263,7 @@ export default function EmployeeDetailPage() {
         {/* Active Projects */}
         <Card hover>
           <CardHeader>
-            <CardTitle>Active Projects ({projects.length})</CardTitle>
+            <CardTitle>Projects ({projects.length})</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">

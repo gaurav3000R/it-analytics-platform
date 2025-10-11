@@ -124,39 +124,47 @@ export default function AnomaliesPage() {
               title: 'Total Anomalies',
               value: anomaliesDashboard?.total_anomalies || 0,
               icon: AlertTriangle,
-              color: 'from-orange-500 to-red-500',
+              bgColor: 'bg-orange-50/80',
+              borderColor: 'border-orange-100',
+              iconColor: 'text-orange-600',
               description: `Last ${anomaliesDashboard?.period_days || 7} days`
             },
             {
               title: 'Critical',
               value: severityData?.critical || 0,
               icon: AlertTriangle,
-              color: 'from-red-500 to-rose-500',
+              bgColor: 'bg-red-50/80',
+              borderColor: 'border-red-100',
+              iconColor: 'text-red-600',
               description: 'Immediate attention'
             },
             {
               title: 'Affected Employees',
               value: anomaliesDashboard?.summary?.affected_employees || 0,
               icon: Users,
-              color: 'from-purple-500 to-pink-500',
+              bgColor: 'bg-purple-50/80',
+              borderColor: 'border-purple-100',
+              iconColor: 'text-purple-600',
               description: 'Team members'
             },
             {
               title: 'Affected Projects',
               value: anomaliesDashboard?.summary?.affected_projects || 0,
               icon: TrendingUp,
-              color: 'from-blue-500 to-cyan-500',
+              bgColor: 'bg-blue-50/80',
+              borderColor: 'border-blue-100',
+              iconColor: 'text-blue-600',
               description: 'Projects'
             },
           ].map((stat, i) => (
             <motion.div key={i} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }}>
               <Card hover glow>
                 <CardContent className="p-6">
-                  <div className={`p-3 rounded-xl bg-gradient-to-br ${stat.color} bg-opacity-20 mb-4 inline-block`}>
-                    <stat.icon className="h-6 w-6" />
+                  <div className={`p-3 rounded-xl ${stat.bgColor} border ${stat.borderColor} mb-4 inline-block`}>
+                    <stat.icon className={`h-6 w-6 ${stat.iconColor}`} />
                   </div>
-                  <h3 className="text-gray-400 text-sm mb-1">{stat.title}</h3>
-                  <p className="text-3xl font-bold mb-1">{stat.value}</p>
+                  <h3 className="text-gray-600 text-sm mb-1 font-medium">{stat.title}</h3>
+                  <p className="text-3xl font-bold text-gray-900 mb-1">{stat.value}</p>
                   <p className="text-xs text-gray-500">{stat.description}</p>
                 </CardContent>
               </Card>

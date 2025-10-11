@@ -56,7 +56,7 @@ export function Sidebar() {
               href={item.href}
               className={cn(
                 'flex items-center gap-3 px-4 py-3 rounded-xl',
-                'font-medium transition-all duration-300',
+                'font-semibold text-base transition-all duration-300',
                 isActive ? [
                   'bg-gradient-to-r from-cyan-50 to-purple-50',
                   'border border-cyan-200',
@@ -86,10 +86,10 @@ export function Sidebar() {
           'bg-gradient-to-br from-purple-50 to-pink-50',
           'border border-purple-200'
         )}>
-          <div className="text-sm font-medium text-gray-900 mb-1">
+          <div className="text-sm font-bold text-gray-900 mb-1">
             System Status
           </div>
-          <div className="flex items-center gap-2 text-xs text-gray-600">
+          <div className="flex items-center gap-2 text-xs text-gray-600 font-medium">
             <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
             All systems operational
           </div>

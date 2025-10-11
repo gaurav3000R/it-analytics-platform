@@ -158,31 +158,36 @@ export default function MLPredictionsPage() {
               title: 'Model Status',
               value: mlHealth?.status || 'Unknown',
               icon: mlHealth?.status === 'healthy' ? CheckCircle : AlertCircle,
-              color:
-                mlHealth?.status === 'healthy'
-                  ? 'from-green-500 to-emerald-500'
-                  : 'from-red-500 to-orange-500',
+              bgColor: mlHealth?.status === 'healthy' ? 'bg-green-50/80' : 'bg-red-50/80',
+              borderColor: mlHealth?.status === 'healthy' ? 'border-green-100' : 'border-red-100',
+              iconColor: mlHealth?.status === 'healthy' ? 'text-green-600' : 'text-red-600',
               description: mlHealth?.version || 'N/A',
             },
             {
               title: 'Model Type',
               value: modelInfo?.model_type || 'N/A',
               icon: Brain,
-              color: 'from-blue-500 to-cyan-500',
+              bgColor: 'bg-blue-50/80',
+              borderColor: 'border-blue-100',
+              iconColor: 'text-blue-600',
               description: modelInfo?.algorithm || 'Machine Learning',
             },
             {
               title: 'Predictions Made',
               value: modelInfo?.predictions_count || '0',
               icon: Target,
-              color: 'from-purple-500 to-pink-500',
+              bgColor: 'bg-purple-50/80',
+              borderColor: 'border-purple-100',
+              iconColor: 'text-purple-600',
               description: 'Total predictions',
             },
             {
               title: 'Model Accuracy',
               value: `${((modelMetrics.accuracy || 0) * 100).toFixed(1)}%`,
               icon: TrendingUp,
-              color: 'from-yellow-500 to-amber-500',
+              bgColor: 'bg-amber-50/80',
+              borderColor: 'border-amber-100',
+              iconColor: 'text-amber-600',
               description: 'Overall accuracy',
             },
           ].map((stat, i) => (
@@ -194,11 +199,11 @@ export default function MLPredictionsPage() {
             >
               <Card hover glow>
                 <CardContent className="p-6">
-                  <div className={`p-3 rounded-xl bg-gradient-to-br ${stat.color} bg-opacity-20 mb-4 inline-block`}>
-                    <stat.icon className="h-6 w-6" />
+                  <div className={`p-3 rounded-xl ${stat.bgColor} border ${stat.borderColor} mb-4 inline-block`}>
+                    <stat.icon className={`h-6 w-6 ${stat.iconColor}`} />
                   </div>
-                  <h3 className="text-gray-400 text-sm mb-1">{stat.title}</h3>
-                  <p className="text-3xl font-bold mb-1">{stat.value}</p>
+                  <h3 className="text-gray-600 text-sm mb-1 font-medium">{stat.title}</h3>
+                  <p className="text-3xl font-bold text-gray-900 mb-1">{stat.value}</p>
                   <p className="text-xs text-gray-500">{stat.description}</p>
                 </CardContent>
               </Card>
@@ -428,19 +433,19 @@ export default function MLPredictionsPage() {
             <div className="space-y-4">
               {predictionResult && (
                 <>
-                  <div className="p-4 rounded-lg bg-gradient-to-r from-blue-500/10 to-cyan-500/10 border border-blue-500/20">
+                  <div className="p-4 rounded-lg bg-blue-50 border-2 border-blue-100">
                     <div className="flex items-center justify-between mb-4">
-                      <h3 className="font-semibold text-lg">Success Probability</h3>
-                      <span className="text-3xl font-bold text-blue-400">
+                      <h3 className="font-semibold text-lg text-gray-900">Success Probability</h3>
+                      <span className="text-3xl font-bold text-blue-600">
                         {((predictionResult.prediction || predictionResult.success_probability || 0) * 100).toFixed(
                           1
                         )}
                         %
                       </span>
                     </div>
-                    <div className="w-full bg-gray-700 rounded-full h-3">
+                    <div className="w-full bg-gray-200 rounded-full h-3">
                       <div
-                        className="bg-gradient-to-r from-blue-500 to-cyan-500 h-3 rounded-full transition-all duration-500"
+                        className="bg-blue-600 h-3 rounded-full transition-all duration-500"
                         style={{
                           width: `${((predictionResult.prediction || predictionResult.success_probability || 0) * 100).toFixed(1)}%`,
                         }}
@@ -450,19 +455,19 @@ export default function MLPredictionsPage() {
 
                   {predictionResult.confidence && (
                     <div className="grid grid-cols-2 gap-4">
-                      <div className="p-4 rounded-lg bg-white/5">
-                        <p className="text-gray-400 text-sm mb-1">Confidence</p>
-                        <p className="text-2xl font-bold">
+                      <div className="p-4 rounded-lg bg-gray-50 border border-gray-200">
+                        <p className="text-gray-600 text-sm mb-1 font-medium">Confidence</p>
+                        <p className="text-2xl font-bold text-gray-900">
                           {(predictionResult.confidence * 100).toFixed(1)}%
                         </p>
                       </div>
-                      <div className="p-4 rounded-lg bg-white/5">
-                        <p className="text-gray-400 text-sm mb-1">Risk Level</p>
+                      <div className="p-4 rounded-lg bg-gray-50 border border-gray-200">
+                        <p className="text-gray-600 text-sm mb-1 font-medium">Risk Level</p>
                         <Badge
                           className={
                             predictionResult.risk_level === 'high'
-                              ? 'bg-red-500/20 text-red-400'
-                              : 'bg-green-500/20 text-green-400'
+                              ? 'bg-red-100 text-red-700 border-red-200'
+                              : 'bg-green-100 text-green-700 border-green-200'
                           }
                         >
                           {predictionResult.risk_level || 'medium'}
@@ -473,10 +478,10 @@ export default function MLPredictionsPage() {
 
                   {predictionResult.recommendations && (
                     <div>
-                      <h4 className="font-semibold mb-2">Recommendations</h4>
+                      <h4 className="font-semibold mb-2 text-gray-900">Recommendations</h4>
                       <div className="space-y-2">
                         {predictionResult.recommendations.map((rec: string, i: number) => (
-                          <div key={i} className="p-3 rounded-lg bg-blue-500/10 border border-blue-500/20 text-sm">
+                          <div key={i} className="p-3 rounded-lg bg-blue-50 border border-blue-100 text-sm text-gray-700">
                             💡 {rec}
                           </div>
                         ))}
@@ -486,19 +491,19 @@ export default function MLPredictionsPage() {
 
                   {predictionResult.features_importance && (
                     <div>
-                      <h4 className="font-semibold mb-2">Feature Importance</h4>
+                      <h4 className="font-semibold mb-2 text-gray-900">Feature Importance</h4>
                       <div className="space-y-2">
                         {Object.entries(predictionResult.features_importance).map(([feature, importance]: any, i) => (
                           <div key={i} className="flex items-center justify-between">
-                            <span className="text-sm text-gray-400">{feature}</span>
+                            <span className="text-sm text-gray-600 font-medium">{feature}</span>
                             <div className="flex items-center gap-2">
-                              <div className="w-32 bg-gray-700 rounded-full h-2">
+                              <div className="w-32 bg-gray-200 rounded-full h-2">
                                 <div
-                                  className="bg-gradient-to-r from-blue-500 to-cyan-500 h-2 rounded-full"
+                                  className="bg-blue-600 h-2 rounded-full"
                                   style={{ width: `${importance * 100}%` }}
                                 />
                               </div>
-                              <span className="text-sm font-medium w-12 text-right">
+                              <span className="text-sm font-medium w-12 text-right text-gray-900">
                                 {(importance * 100).toFixed(0)}%
                               </span>
                             </div>

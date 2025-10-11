@@ -20,9 +20,9 @@ export function Header() {
         {/* Logo */}
         <Link href="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
           <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500 to-purple-500 flex items-center justify-center shadow-md">
-            <span className="text-white font-bold text-lg">IT</span>
+            <span className="text-white font-bold text-xl">IT</span>
           </div>
-          <span className="text-xl font-bold bg-gradient-to-r from-cyan-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
+          <span className="text-2xl font-bold bg-gradient-to-r from-cyan-600 via-purple-600 to-pink-600 bg-clip-text text-transparent tracking-tight">
             Analytics Platform
           </span>
         </Link>
@@ -40,7 +40,7 @@ export function Header() {
                 'w-full pl-11 pr-4 py-2 rounded-full',
                 'bg-gray-50 backdrop-blur-xl',
                 'border border-gray-200',
-                'text-gray-900 text-sm placeholder-gray-500',
+                'text-gray-900 text-sm font-medium placeholder-gray-500',
                 'transition-all duration-300',
                 'hover:bg-white hover:border-gray-300',
                 'focus:outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20'

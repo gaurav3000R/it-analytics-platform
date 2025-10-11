@@ -154,12 +154,12 @@ export default function ProjectsPage() {
             <Card hover glow>
               <CardContent className="p-6">
                 <div className="flex items-center justify-between mb-4">
-                  <div className="p-3 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 bg-opacity-20">
-                    <FolderKanban className="h-6 w-6 text-blue-400" />
+                  <div className="p-3 rounded-xl bg-blue-50/80 border border-blue-100">
+                    <FolderKanban className="h-6 w-6 text-blue-600" />
                   </div>
                 </div>
-                <h3 className="text-gray-400 text-sm mb-1">Total Projects</h3>
-                <p className="text-3xl font-bold">{stats.total}</p>
+                <h3 className="text-gray-600 text-sm mb-1 font-medium">Total Projects</h3>
+                <p className="text-3xl font-bold text-gray-900">{stats.total}</p>
               </CardContent>
             </Card>
           </motion.div>
@@ -168,12 +168,12 @@ export default function ProjectsPage() {
             <Card hover glow>
               <CardContent className="p-6">
                 <div className="flex items-center justify-between mb-4">
-                  <div className="p-3 rounded-xl bg-gradient-to-br from-green-500 to-emerald-500 bg-opacity-20">
-                    <TrendingUp className="h-6 w-6 text-green-400" />
+                  <div className="p-3 rounded-xl bg-green-50/80 border border-green-100">
+                    <TrendingUp className="h-6 w-6 text-green-600" />
                   </div>
                 </div>
-                <h3 className="text-gray-400 text-sm mb-1">Active Projects</h3>
-                <p className="text-3xl font-bold">{stats.active}</p>
+                <h3 className="text-gray-600 text-sm mb-1 font-medium">Active Projects</h3>
+                <p className="text-3xl font-bold text-gray-900">{stats.active}</p>
               </CardContent>
             </Card>
           </motion.div>
@@ -182,12 +182,12 @@ export default function ProjectsPage() {
             <Card hover glow>
               <CardContent className="p-6">
                 <div className="flex items-center justify-between mb-4">
-                  <div className="p-3 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 bg-opacity-20">
-                    <Clock className="h-6 w-6 text-purple-400" />
+                  <div className="p-3 rounded-xl bg-purple-50/80 border border-purple-100">
+                    <Clock className="h-6 w-6 text-purple-600" />
                   </div>
                 </div>
-                <h3 className="text-gray-400 text-sm mb-1">Completed</h3>
-                <p className="text-3xl font-bold">{stats.completed}</p>
+                <h3 className="text-gray-600 text-sm mb-1 font-medium">Completed</h3>
+                <p className="text-3xl font-bold text-gray-900">{stats.completed}</p>
               </CardContent>
             </Card>
           </motion.div>
@@ -196,12 +196,12 @@ export default function ProjectsPage() {
             <Card hover glow>
               <CardContent className="p-6">
                 <div className="flex items-center justify-between mb-4">
-                  <div className="p-3 rounded-xl bg-gradient-to-br from-yellow-500 to-orange-500 bg-opacity-20">
-                    <DollarSign className="h-6 w-6 text-yellow-400" />
+                  <div className="p-3 rounded-xl bg-amber-50/80 border border-amber-100">
+                    <DollarSign className="h-6 w-6 text-amber-600" />
                   </div>
                 </div>
-                <h3 className="text-gray-400 text-sm mb-1">Total Budget</h3>
-                <p className="text-3xl font-bold">{formatCurrency(stats.totalBudget)}</p>
+                <h3 className="text-gray-600 text-sm mb-1 font-medium">Total Budget</h3>
+                <p className="text-3xl font-bold text-gray-900">{formatCurrency(stats.totalBudget)}</p>
               </CardContent>
             </Card>
           </motion.div>

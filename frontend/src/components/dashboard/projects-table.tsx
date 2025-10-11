@@ -85,7 +85,7 @@ export function ProjectsTable({ projects }: ProjectsTableProps) {
                     <div className="flex items-center justify-center gap-2">
                       <div className="w-16 bg-gray-200 rounded-full h-2">
                         <div
-                          className="bg-gradient-to-r from-blue-500 to-cyan-500 h-2 rounded-full"
+                          className="bg-blue-600 h-2 rounded-full"
                           style={{ width: `${(project.complexity_score || 0) * 10}%` }}
                         />
                       </div>

@@ -50,17 +50,17 @@ export function DashboardOverview() {
       {/* Page Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-cyan-600 via-purple-600 to-pink-600 bg-clip-text text-transparent mb-2">
+          <h1 className="text-5xl font-bold bg-gradient-to-r from-cyan-600 via-purple-600 to-pink-600 bg-clip-text text-transparent mb-3 tracking-tight">
             Dashboard Overview
           </h1>
-          <p className="text-gray-600">
+          <p className="text-lg text-gray-600 leading-relaxed">
             Real-time insights and analytics for your IT portfolio
           </p>
         </div>
         
         <ButtonFuturistic variant="primary" size="md">
           <TrendingUp className="w-5 h-5 mr-2" />
-          Generate Report
+          <span className="font-semibold">Generate Report</span>
         </ButtonFuturistic>
       </div>
       
@@ -103,12 +103,12 @@ export function DashboardOverview() {
       {/* Projects Grid */}
       <div>
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold text-gray-900">Active Projects</h2>
+          <h2 className="text-3xl font-bold text-gray-900 tracking-tight">Active Projects</h2>
           <Link
             href="/projects"
-            className="text-cyan-600 hover:text-cyan-700 transition-colors text-sm font-medium"
+            className="text-cyan-600 hover:text-cyan-700 transition-colors text-base font-semibold flex items-center gap-2"
           >
-            View All →
+            View All <span className="text-lg">→</span>
           </Link>
         </div>
         
@@ -126,10 +126,10 @@ export function DashboardOverview() {
           <GlassCard>
             <div className="text-center py-12">
               <FolderKanban className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">No Projects Found</h3>
-              <p className="text-gray-600 text-sm mb-4">Get started by creating your first project</p>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">No Projects Found</h3>
+              <p className="text-base text-gray-600 mb-4">Get started by creating your first project</p>
               <ButtonFuturistic variant="primary" size="sm">
-                Create Project
+                <span className="font-semibold">Create Project</span>
               </ButtonFuturistic>
             </div>
           </GlassCard>
@@ -148,13 +148,13 @@ export function DashboardOverview() {
       
       {/* Recent Activity */}
       <GlassCard hover={false}>
-        <h3 className="text-xl font-bold text-gray-900 mb-4">Recent Activity</h3>
+        <h3 className="text-2xl font-bold text-gray-900 mb-6 tracking-tight">Recent Activity</h3>
         <div className="space-y-3">
           {[1, 2, 3].map((i) => (
             <div key={i} className="flex items-center gap-4 p-3 rounded-lg hover:bg-gray-50 transition-colors">
               <div className="w-2 h-2 rounded-full bg-cyan-500 animate-pulse" />
               <div className="flex-1">
-                <p className="text-gray-900 text-sm">Project {i} updated</p>
+                <p className="text-gray-900 text-sm font-medium">Project {i} updated</p>
                 <p className="text-gray-500 text-xs">{i * 2} minutes ago</p>
               </div>
             </div>

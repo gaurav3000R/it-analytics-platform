@@ -20,31 +20,38 @@ export const MetricCardFuturistic: React.FC<MetricCardProps> = ({
   loading = false,
 }) => {
   const gradients = {
-    cyan: 'from-cyan-500/10 to-purple-500/10 border-cyan-500/20',
-    purple: 'from-purple-500/10 to-pink-500/10 border-purple-500/20',
-    pink: 'from-pink-500/10 to-purple-500/10 border-pink-500/20',
-    green: 'from-green-500/10 to-emerald-500/10 border-green-500/20',
+    cyan: 'bg-cyan-50/80 border-cyan-100',
+    purple: 'bg-purple-50/80 border-purple-100',
+    pink: 'bg-pink-50/80 border-pink-100',
+    green: 'bg-green-50/80 border-green-100',
   };
   
   const iconColors = {
-    cyan: 'text-cyan-400',
-    purple: 'text-purple-400',
-    pink: 'text-pink-400',
-    green: 'text-green-400',
+    cyan: 'text-cyan-600',
+    purple: 'text-purple-600',
+    pink: 'text-pink-600',
+    green: 'text-green-600',
+  };
+  
+  const iconBgColors = {
+    cyan: 'bg-cyan-100',
+    purple: 'bg-purple-100',
+    pink: 'bg-pink-100',
+    green: 'bg-green-100',
   };
   
   if (loading) {
     return (
       <div className={cn(
         'relative rounded-2xl p-6',
-        'bg-gradient-to-br backdrop-blur-xl border',
+        'backdrop-blur-xl border-2',
         'overflow-hidden animate-pulse',
         'shadow-sm',
         gradients[color]
       )}>
-        <div className="h-4 bg-gray-200 rounded w-1/2 mb-4" />
-        <div className="h-8 bg-gray-200 rounded w-3/4 mb-2" />
-        <div className="h-3 bg-gray-200 rounded w-1/3" />
+        <div className="h-4 bg-gray-300 rounded w-1/2 mb-4" />
+        <div className="h-8 bg-gray-300 rounded w-3/4 mb-2" />
+        <div className="h-3 bg-gray-300 rounded w-1/3" />
       </div>
     );
   }
@@ -52,14 +59,14 @@ export const MetricCardFuturistic: React.FC<MetricCardProps> = ({
   return (
     <div className={cn(
       'relative rounded-2xl p-6',
-      'bg-gradient-to-br backdrop-blur-xl border',
+      'backdrop-blur-xl border-2',
       'overflow-hidden transition-all duration-300',
       'hover:scale-[1.02] hover:-translate-y-1',
       'shadow-sm hover:shadow-lg',
       gradients[color]
     )}>
       {/* Background Pattern */}
-      <div className="absolute inset-0 opacity-10">
+      <div className="absolute inset-0 opacity-5">
         <div className="absolute inset-0" style={{
           backgroundImage: `repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.05) 2px, rgba(0,0,0,0.05) 4px)`
         }} />
@@ -68,29 +75,29 @@ export const MetricCardFuturistic: React.FC<MetricCardProps> = ({
       {/* Content */}
       <div className="relative z-10">
         <div className="flex items-center justify-between mb-4">
-          <span className={cn('text-sm font-medium', iconColors[color])}>
+          <span className={cn('text-sm font-semibold uppercase tracking-wide', iconColors[color])}>
             {title}
           </span>
           {icon && (
-            <div className={cn('p-2 rounded-lg bg-white/50', iconColors[color])}>
+            <div className={cn('p-2 rounded-lg', iconBgColors[color], iconColors[color])}>
               {icon}
             </div>
           )}
         </div>
         
-        <div className="text-gray-900 text-3xl font-bold mb-2">
+        <div className="text-gray-900 text-4xl md:text-5xl font-bold mb-3 tracking-tight">
           {value}
         </div>
         
         {change !== undefined && (
           <div className={cn(
-            'flex items-center gap-1 text-xs font-medium',
+            'flex items-center gap-1.5 text-sm font-semibold',
             change >= 0 ? 'text-green-600' : 'text-red-600'
           )}>
             {change >= 0 ? (
-              <TrendingUp className="w-3 h-3" />
+              <TrendingUp className="w-4 h-4" />
             ) : (
-              <TrendingDown className="w-3 h-3" />
+              <TrendingDown className="w-4 h-4" />
             )}
             <span>{Math.abs(change)}% from last period</span>
           </div>

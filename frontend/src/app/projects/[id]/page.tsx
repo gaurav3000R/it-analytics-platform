@@ -108,10 +108,20 @@ export default function ProjectDetailPage() {
   const riskLevel =
     riskScore > 70 ? 'High' : riskScore > 40 ? 'Medium' : 'Low'
   
-  const riskColor =
-    riskLevel === 'High' ? 'from-red-500 to-rose-500' :
-    riskLevel === 'Medium' ? 'from-yellow-500 to-amber-500' :
-    'from-green-500 to-emerald-500'
+  const riskColorBg =
+    riskLevel === 'High' ? 'bg-red-50/80' :
+    riskLevel === 'Medium' ? 'bg-amber-50/80' :
+    'bg-green-50/80'
+  
+  const riskColorBorder =
+    riskLevel === 'High' ? 'border-red-100' :
+    riskLevel === 'Medium' ? 'border-amber-100' :
+    'border-green-100'
+  
+  const riskColorText =
+    riskLevel === 'High' ? 'text-red-600' :
+    riskLevel === 'Medium' ? 'text-amber-600' :
+    'text-green-600'
 
   const anomaliesCount = projectAnomalies?.total_anomalies || 0
   const bugsCount = bugAnalysis?.total_bugs || 0
@@ -121,16 +131,16 @@ export default function ProjectDetailPage() {
     <DashboardLayout>
       <div className="space-y-6">
         {/* Project Header */}
-        <Card className="border-2 border-blue-500/20 bg-gradient-to-r from-blue-500/5 to-cyan-500/5">
+        <Card className="border-2 border-blue-100 bg-blue-50/30">
           <CardContent className="p-8">
             <div className="flex items-start justify-between">
               <div className="flex items-center gap-6">
-                <div className="w-20 h-20 rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center">
-                  <FolderKanban className="h-10 w-10 text-white" />
+                <div className="w-20 h-20 rounded-full bg-blue-100 border-2 border-blue-200 flex items-center justify-center">
+                  <FolderKanban className="h-10 w-10 text-blue-600" />
                 </div>
                 <div>
-                  <h1 className="text-4xl font-bold mb-2">{project.name || project.project_id}</h1>
-                  <div className="flex items-center gap-4 text-gray-400 mb-3">
+                  <h1 className="text-4xl font-bold text-gray-900 mb-2">{project.name || project.project_id}</h1>
+                  <div className="flex items-center gap-4 text-gray-600 mb-3">
                     <div className="flex items-center gap-2">
                       <Calendar className="h-4 w-4" />
                       <span>ID: {project.project_id}</span>
@@ -144,10 +154,10 @@ export default function ProjectDetailPage() {
                     <Badge
                       className={
                         riskLevel === 'High'
-                          ? 'bg-red-500/20 text-red-400'
+                          ? 'bg-red-100 text-red-700 border-red-200'
                           : riskLevel === 'Medium'
-                          ? 'bg-yellow-500/20 text-yellow-400'
-                          : 'bg-green-500/20 text-green-400'
+                          ? 'bg-amber-100 text-amber-700 border-amber-200'
+                          : 'bg-green-100 text-green-700 border-green-200'
                       }
                     >
                       {riskLevel} Risk
@@ -160,8 +170,8 @@ export default function ProjectDetailPage() {
               </div>
 
               <div className="text-right">
-                <p className="text-gray-400 text-sm mb-2">Risk Score</p>
-                <p className={`text-5xl font-bold bg-gradient-to-r ${riskColor} bg-clip-text text-transparent`}>
+                <p className="text-gray-600 text-sm mb-2 font-medium">Risk Score</p>
+                <p className={`text-5xl font-bold ${riskColorText}`}>
                   {riskScore.toFixed(0)}
                 </p>
               </div>
@@ -176,28 +186,36 @@ export default function ProjectDetailPage() {
               title: 'Budget',
               value: `$${((project.budget_usd || 0) / 1000).toFixed(0)}k`,
               icon: DollarSign,
-              color: 'from-green-500 to-emerald-500',
+              bgColor: 'bg-green-50/80',
+              borderColor: 'border-green-100',
+              iconColor: 'text-green-600',
               description: `${budgetUtilization.toFixed(0)}% utilized`,
             },
             {
               title: 'Team Size',
               value: project.team_size || 0,
               icon: Users,
-              color: 'from-blue-500 to-cyan-500',
+              bgColor: 'bg-blue-50/80',
+              borderColor: 'border-blue-100',
+              iconColor: 'text-blue-600',
               description: 'Team members',
             },
             {
               title: 'Active Bugs',
               value: bugsCount,
               icon: Bug,
-              color: 'from-red-500 to-orange-500',
+              bgColor: 'bg-red-50/80',
+              borderColor: 'border-red-100',
+              iconColor: 'text-red-600',
               description: 'Open issues',
             },
             {
               title: 'Anomalies',
               value: anomaliesCount,
               icon: AlertTriangle,
-              color: 'from-yellow-500 to-amber-500',
+              bgColor: 'bg-amber-50/80',
+              borderColor: 'border-amber-100',
+              iconColor: 'text-amber-600',
               description: 'Detected',
             },
           ].map((metric, i) => (
@@ -209,11 +227,11 @@ export default function ProjectDetailPage() {
             >
               <Card hover glow>
                 <CardContent className="p-6">
-                  <div className={`p-3 rounded-xl bg-gradient-to-br ${metric.color} bg-opacity-20 mb-4 inline-block`}>
-                    <metric.icon className="h-6 w-6" />
+                  <div className={`p-3 rounded-xl ${metric.bgColor} border ${metric.borderColor} mb-4 inline-block`}>
+                    <metric.icon className={`h-6 w-6 ${metric.iconColor}`} />
                   </div>
-                  <h3 className="text-gray-400 text-sm mb-1">{metric.title}</h3>
-                  <p className="text-3xl font-bold mb-1">{metric.value}</p>
+                  <h3 className="text-gray-600 text-sm mb-1 font-medium">{metric.title}</h3>
+                  <p className="text-3xl font-bold text-gray-900 mb-1">{metric.value}</p>
                   <p className="text-xs text-gray-500">{metric.description}</p>
                 </CardContent>
               </Card>

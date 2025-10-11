@@ -63,7 +63,7 @@ export const ProjectCardFuturistic: React.FC<ProjectCardProps> = ({
       <div className="relative z-10">
         {/* Header */}
         <div className="flex items-start justify-between mb-4">
-          <h3 className="text-lg font-semibold text-gray-900 truncate flex-1 mr-2">
+          <h3 className="text-xl font-bold text-gray-900 truncate flex-1 mr-2 tracking-tight">
             {project.name}
           </h3>
           <StatusBadge
@@ -76,10 +76,10 @@ export const ProjectCardFuturistic: React.FC<ProjectCardProps> = ({
         {/* Progress Bar */}
         <div className="mb-4">
           <div className="flex justify-between text-sm mb-2">
-            <span className="text-gray-600">Progress</span>
-            <span className="text-gray-900 font-medium">{progress}%</span>
+            <span className="text-gray-600 font-medium">Progress</span>
+            <span className="text-gray-900 font-bold">{progress}%</span>
           </div>
-          <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+          <div className="h-2.5 bg-gray-100 rounded-full overflow-hidden">
             <div
               className="h-full bg-gradient-to-r from-cyan-500 to-purple-500 rounded-full transition-all duration-500"
               style={{ width: `${progress}%` }}
@@ -88,12 +88,12 @@ export const ProjectCardFuturistic: React.FC<ProjectCardProps> = ({
         </div>
         
         {/* Meta Info */}
-        <div className="grid grid-cols-3 gap-4 text-sm">
+        <div className="grid grid-cols-3 gap-4">
           <div className="flex items-center gap-2">
             <DollarSign className="w-4 h-4 text-gray-500 flex-shrink-0" />
             <div className="min-w-0">
-              <div className="text-gray-500 text-xs">Budget</div>
-              <div className="text-gray-900 font-medium truncate">
+              <div className="text-gray-500 text-xs font-medium">Budget</div>
+              <div className="text-gray-900 font-bold text-sm truncate">
                 ${typeof budget === 'number' ? (budget / 1000).toFixed(0) : budget}K
               </div>
             </div>
@@ -107,9 +107,9 @@ export const ProjectCardFuturistic: React.FC<ProjectCardProps> = ({
               'text-green-500'
             )} />
             <div className="min-w-0">
-              <div className="text-gray-500 text-xs">Risk</div>
+              <div className="text-gray-500 text-xs font-medium">Risk</div>
               <div className={cn(
-                'font-medium truncate',
+                'font-bold text-sm truncate',
                 riskLevel === 'error' ? 'text-red-500' :
                 riskLevel === 'warning' ? 'text-yellow-500' :
                 'text-green-500'
@@ -122,8 +122,8 @@ export const ProjectCardFuturistic: React.FC<ProjectCardProps> = ({
           <div className="flex items-center gap-2">
             <Users className="w-4 h-4 text-gray-500 flex-shrink-0" />
             <div className="min-w-0">
-              <div className="text-gray-500 text-xs">Team</div>
-              <div className="text-gray-900 font-medium truncate">{teamSize}</div>
+              <div className="text-gray-500 text-xs font-medium">Team</div>
+              <div className="text-gray-900 font-bold text-sm truncate">{teamSize}</div>
             </div>
           </div>
         </div>

@@ -102,28 +102,36 @@ export default function CostsPage() {
               title: 'Total Budget', 
               value: `$${(totalBudget / 1000000).toFixed(2)}M`, 
               icon: DollarSign, 
-              color: 'from-blue-500 to-cyan-500',
+              bgColor: 'bg-blue-50/80',
+              borderColor: 'border-blue-100',
+              iconColor: 'text-blue-600',
               description: 'Portfolio total'
             },
             { 
               title: 'Spent to Date', 
               value: `$${(totalSpent / 1000000).toFixed(2)}M`, 
               icon: TrendingUp, 
-              color: 'from-purple-500 to-pink-500',
+              bgColor: 'bg-purple-50/80',
+              borderColor: 'border-purple-100',
+              iconColor: 'text-purple-600',
               description: `${((totalSpent / totalBudget) * 100).toFixed(1)}% utilized`
             },
             { 
               title: 'Budget Alerts', 
               value: budgetAlerts?.total_alerts || 0, 
               icon: AlertTriangle, 
-              color: 'from-red-500 to-orange-500',
+              bgColor: 'bg-red-50/80',
+              borderColor: 'border-red-100',
+              iconColor: 'text-red-600',
               description: `${criticalAlerts.length} critical`
             },
             { 
               title: 'Avg Overrun Risk', 
               value: `${(avgOverrunRisk * 100).toFixed(1)}%`, 
               icon: TrendingDown, 
-              color: 'from-yellow-500 to-amber-500',
+              bgColor: 'bg-amber-50/80',
+              borderColor: 'border-amber-100',
+              iconColor: 'text-amber-600',
               description: 'Portfolio average'
             },
           ].map((stat, i) => (
@@ -131,12 +139,12 @@ export default function CostsPage() {
               <Card hover glow>
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between mb-4">
-                    <div className={`p-3 rounded-xl bg-gradient-to-br ${stat.color} bg-opacity-20`}>
-                      <stat.icon className="h-6 w-6" />
+                    <div className={`p-3 rounded-xl ${stat.bgColor} border ${stat.borderColor}`}>
+                      <stat.icon className={`h-6 w-6 ${stat.iconColor}`} />
                     </div>
                   </div>
-                  <h3 className="text-gray-400 text-sm mb-1">{stat.title}</h3>
-                  <p className="text-3xl font-bold mb-1">{stat.value}</p>
+                  <h3 className="text-gray-600 text-sm mb-1 font-medium">{stat.title}</h3>
+                  <p className="text-3xl font-bold text-gray-900 mb-1">{stat.value}</p>
                   <p className="text-xs text-gray-500">{stat.description}</p>
                 </CardContent>
               </Card>
