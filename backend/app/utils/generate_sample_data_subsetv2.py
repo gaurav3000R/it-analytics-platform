@@ -254,11 +254,20 @@ class SampleDataGenerator:
         employees: List[Dict], 
         projects: List[Dict]
     ) -> List[Dict]:
-        """Create realistic project assignments with possible overbooking"""
+        """Create realistic project assignments with proper max_projects_per_employee constraint enforcement
+
+        This method now tracks how many projects each employee is assigned to and skips employees
+        who have reached the max_projects_per_employee limit, ensuring the constraint is enforced
+        during assignment creation rather than just during daily logging.
+        """
         assignments = []
         available_employees = employees.copy()
         np.random.shuffle(available_employees)
-        employee_idx = 0
+
+        # Track how many projects each employee is assigned to
+        employee_project_count = {emp['id']: 0 for emp in employees}
+        max_projects = self.config.max_projects_per_employee
+
         batch_size = 100
         assignment_batch = []
         
@@ -274,13 +283,25 @@ class SampleDataGenerator:
             team_size = max(2, min(team_size, 20))
             
             team = []
-            for _ in range(team_size):
-                if employee_idx >= len(available_employees):
-                    employee_idx = 0
-                emp = available_employees[employee_idx]
-                if emp['is_active']:
-                    team.append(emp)
-                employee_idx += 1
+            employees_considered = 0
+
+            # Find available employees who haven't reached the max project limit
+            while len(team) < team_size and employees_considered < len(available_employees):
+                # Cycle through employees in round-robin fashion
+                emp_idx = employees_considered % len(available_employees)
+                emp = available_employees[emp_idx]
+                employees_considered += 1
+
+                # Skip inactive employees or those at max project limit
+                if not emp['is_active'] or employee_project_count[emp['id']] >= max_projects:
+                    continue
+
+                team.append(emp)
+                employee_project_count[emp['id']] += 1
+
+            # Log if we couldn't fill the team due to constraint
+            if len(team) < team_size:
+                logger.info(f"Project {project['id']}: Could only assign {len(team)}/{team_size} employees due to max_projects_per_employee constraint")
             
             project_start = pd.to_datetime(project.get('start_date') or (datetime.now() - timedelta(days=np.random.randint(90, 180))))
             project_end = pd.to_datetime(project.get('end_date') or (project_start + timedelta(days=np.random.randint(90, 720))))
@@ -334,6 +355,13 @@ class SampleDataGenerator:
                 raise
         
         return assignments
+
+        # Note: This method now properly enforces the max_projects_per_employee constraint
+        # during assignment creation by:
+        # 1. Tracking project count per employee in employee_project_count dictionary
+        # 2. Skipping employees who have reached the limit when building teams
+        # 3. Logging when teams can't be fully staffed due to the constraint
+        # This ensures employees are never assigned to more projects than the configured limit.
     
     def _generate_daily_logs_with_anomalies(
         self, 
