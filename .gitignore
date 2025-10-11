@@ -384,3 +384,4 @@ test_local.py
 
 *.db
 
+package-lock.json
