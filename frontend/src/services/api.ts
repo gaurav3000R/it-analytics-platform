@@ -15,20 +15,6 @@ import type {
   BudgetAlert,
 } from '@/types'
 
-// ========================================================================
-// TEMPORARY MOCK DATA IMPORTS
-// ========================================================================
-// TODO: Remove these imports once backend APIs are fixed
-// These are temporary patches for APIs that have backend errors:
-// - /api/v1/analytics/risk-dashboard
-// - /api/v1/cost-forecasting/portfolio-summary
-// - /api/v1/cost-forecasting/budget-alerts
-import {
-  mockRiskDashboard,
-  mockCostPortfolioSummary,
-  mockBudgetAlerts
-} from './mock-data'
-// ========================================================================
 
 export const projectsApi = {
   getAll: () => apiClient.get<Project[]>(API_ENDPOINTS.PROJECTS),
