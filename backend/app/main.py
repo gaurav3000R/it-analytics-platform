@@ -129,7 +129,8 @@ def show_system_status():
     
     # Check Supabase connection
     try:
-        db = get_db()
+        
+        db = next(get_db())        
         
         # Count projects
         projects_response = db.table('projects').select('id', count='exact').execute()
