@@ -27,14 +27,14 @@ def setup_database():
     except Exception as e:
         print(f"❌ Error setting up database: {e}")
 
-def load_csv_data(csv_file_path: str = None, clear_existing: bool = False):
-    """Load CSV data into database"""
+def load_csv_data(csv_file_path: str = None, clear_existing: bool = False, batch_size: int = 100):
+    """Load CSV data into database using batch inserts for better performance"""
     print("Loading CSV data...")
     
     db = get_db()
     try:
         csv_loader = CSVLoaderService()
-        result = csv_loader.csv_to_database(db, csv_file_path, clear_existing)
+        result = csv_loader.csv_to_database(db, csv_file_path, clear_existing, batch_size)
         
         print(f"✅ CSV data loaded successfully")
         print(f"   - Projects created: {result['projects_created']}")
@@ -177,6 +177,7 @@ def main():
     parser.add_argument("--setup-db", action="store_true", help="Setup database tables")
     parser.add_argument("--load-csv", nargs='?', const="default", help="Load CSV file")
     parser.add_argument("--clear-existing", action="store_true", help="Clear existing data before loading CSV")
+    parser.add_argument("--batch-size", type=int, default=100, help="Batch size for CSV imports (default: 100)")
     parser.add_argument("--train-models", action="store_true", help="Train ML models")
     parser.add_argument("--detect-anomalies", action="store_true", help="Run anomaly detection")
     parser.add_argument("--ai-insights", help="Generate AI insights (project_id or 'portfolio')")
@@ -197,7 +198,7 @@ def main():
     
     if args.load_csv is not None:
         csv_file = None if args.load_csv == "default" else args.load_csv
-        load_csv_data(csv_file, args.clear_existing)
+        load_csv_data(csv_file, args.clear_existing, args.batch_size)
     
     if args.train_models:
         train_risk_models()

@@ -123,8 +123,8 @@ class CSVLoaderService:
         return df
 
     def csv_to_database(self, db: Client = None, file_path: Optional[str] = None,
-                   clear_existing: bool = False) -> Dict[str, Any]:
-        """Load CSV data into database"""
+                   clear_existing: bool = False, batch_size: int = 100) -> Dict[str, Any]:
+        """Load CSV data into database using batch inserts for better performance"""
         
         # Get database connection if not provided
         if db is None:
@@ -145,33 +145,66 @@ class CSVLoaderService:
         projects_updated = 0
         errors = []
 
+        # Get all existing project IDs in one query for faster lookups
+        logger.info("Fetching existing projects...")
+        existing_projects_response = db.table("projects").select("project_id, id").execute()
+        existing_project_ids = {p['project_id']: p for p in existing_projects_response.data}
+        logger.info(f"Found {len(existing_project_ids)} existing projects")
+
+        # Separate new projects from updates
+        new_projects = []
+        projects_to_update = []
+
         for index, row in df.iterrows():
             try:
-                # Check if project already exists
                 project_id = str(row.get('project_id', f'proj_{index}'))
                 
-                # Use ilike for case-insensitive comparison
-                existing_project_response = db.table("projects").select("*").ilike("project_id", project_id).execute()
-                existing_project = existing_project_response.data[0] if existing_project_response.data else None
-
-                if existing_project:
-                    # Update existing project
-                    self._update_project_from_row(db, existing_project, row)
-                    projects_updated += 1
+                if project_id in existing_project_ids:
+                    # Prepare update data
+                    existing_project = existing_project_ids[project_id]
+                    update_data = self._prepare_update_data(row, existing_project)
+                    projects_to_update.append({
+                        'project_id': project_id,
+                        'data': update_data
+                    })
                 else:
-                    # Create new project
+                    # Prepare new project
                     project = self._create_project_from_row(row, index)
-                    db.table("projects").insert(project).execute()
-                    projects_created += 1
-
-                # Commit every 10 records to avoid large transactions
-                if (index + 1) % 10 == 0:
-                    logger.info(f"Processed {index + 1} rows")
+                    new_projects.append(project)
 
             except Exception as e:
-                error_msg = f"Error processing row {index}: {e}"
+                error_msg = f"Error preparing row {index}: {e}"
                 logger.error(error_msg)
                 errors.append(error_msg)
+
+        # Batch insert new projects
+        if new_projects:
+            logger.info(f"Inserting {len(new_projects)} new projects in batches of {batch_size}...")
+            for i in range(0, len(new_projects), batch_size):
+                batch = new_projects[i:i + batch_size]
+                try:
+                    db.table("projects").insert(batch).execute()
+                    projects_created += len(batch)
+                    logger.info(f"Inserted batch {i // batch_size + 1}: {len(batch)} projects")
+                except Exception as e:
+                    error_msg = f"Error inserting batch {i // batch_size + 1}: {e}"
+                    logger.error(error_msg)
+                    errors.append(error_msg)
+
+        # Batch update existing projects
+        if projects_to_update:
+            logger.info(f"Updating {len(projects_to_update)} existing projects in batches of {batch_size}...")
+            for i in range(0, len(projects_to_update), batch_size):
+                batch = projects_to_update[i:i + batch_size]
+                for update_item in batch:
+                    try:
+                        db.table("projects").update(update_item['data']).eq("project_id", update_item['project_id']).execute()
+                        projects_updated += 1
+                    except Exception as e:
+                        error_msg = f"Error updating project {update_item['project_id']}: {e}"
+                        logger.error(error_msg)
+                        errors.append(error_msg)
+                logger.info(f"Updated batch {i // batch_size + 1}: {len(batch)} projects")
 
         result = {
             "total_rows_processed": len(df),
@@ -254,6 +287,63 @@ class CSVLoaderService:
         }
 
         return project
+
+    def _prepare_update_data(self, row: pd.Series, existing_project: Dict) -> Dict:
+        """Prepare update data for an existing project"""
+        update_data = {
+            "project_type": str(row.get('project_type', existing_project.get('project_type', 'Unknown'))),
+            "team_size": self._safe_int(row.get('team_size')) or existing_project.get('team_size'),
+            "project_budget_usd": self._safe_float(row.get('project_budget_usd')) or existing_project.get('project_budget_usd'),
+            "estimated_timeline_months": self._safe_float(row.get('estimated_timeline_months')) or existing_project.get('estimated_timeline_months'),
+            "complexity_score": self._safe_float(row.get('complexity_score')) or existing_project.get('complexity_score'),
+            "stakeholder_count": self._safe_int(row.get('stakeholder_count')) or existing_project.get('stakeholder_count'),
+            "methodology_used": str(row.get('methodology_used', existing_project.get('methodology_used', 'Unknown'))),
+            "team_experience_level": str(row.get('team_experience_level', existing_project.get('team_experience_level', 'Unknown'))),
+            "past_similar_projects": self._safe_int(row.get('past_similar_projects')) or existing_project.get('past_similar_projects'),
+            "external_dependencies_count": self._safe_int(row.get('external_dependencies_count')) or existing_project.get('external_dependencies_count'),
+            "change_request_frequency": str(row.get('change_request_frequency', existing_project.get('change_request_frequency', 'Unknown'))),
+            "project_phase": str(row.get('project_phase', existing_project.get('project_phase', 'Unknown'))),
+            "requirement_stability": str(row.get('requirement_stability', existing_project.get('requirement_stability', 'Unknown'))),
+            "team_turnover_rate": str(row.get('team_turnover_rate', existing_project.get('team_turnover_rate', 'Unknown'))),
+            "vendor_reliability_score": self._safe_float(row.get('vendor_reliability_score')) or existing_project.get('vendor_reliability_score'),
+            "historical_risk_incidents": self._safe_int(row.get('historical_risk_incidents')) or existing_project.get('historical_risk_incidents'),
+            "communication_frequency": str(row.get('communication_frequency', existing_project.get('communication_frequency', 'Unknown'))),
+            "budget_utilization_rate": self._safe_float(row.get('budget_utilization_rate')) or existing_project.get('budget_utilization_rate'),
+            "resource_availability": str(row.get('resource_availability', existing_project.get('resource_availability', 'Unknown'))),
+            "current_phase_duration_months": self._safe_float(row.get('current_phase_duration_months')) or existing_project.get('current_phase_duration_months'),
+            "project_manager_experience": str(row.get('project_manager_experience', existing_project.get('project_manager_experience', 'Unknown'))),
+            "stakeholder_engagement_level": str(row.get('stakeholder_engagement_level', existing_project.get('stakeholder_engagement_level', 'Unknown'))),
+            "key_stakeholder_availability": str(row.get('key_stakeholder_availability', existing_project.get('key_stakeholder_availability', 'Unknown'))),
+            "team_colocation": str(row.get('team_colocation', existing_project.get('team_colocation', 'Unknown'))),
+            "regulatory_compliance_level": str(row.get('regulatory_compliance_level', existing_project.get('regulatory_compliance_level', 'Unknown'))),
+            "executive_sponsorship": str(row.get('executive_sponsorship', existing_project.get('executive_sponsorship', 'Unknown'))),
+            "funding_source": str(row.get('funding_source', existing_project.get('funding_source', 'Unknown'))),
+            "organizational_change_frequency": str(row.get('organizational_change_frequency', existing_project.get('organizational_change_frequency', 'Unknown'))),
+            "org_process_maturity": str(row.get('org_process_maturity', existing_project.get('org_process_maturity', 'Unknown'))),
+            "risk_management_maturity": str(row.get('risk_management_maturity', existing_project.get('risk_management_maturity', 'Unknown'))),
+            "change_control_maturity": str(row.get('change_control_maturity', existing_project.get('change_control_maturity', 'Unknown'))),
+            "technology_familiarity": str(row.get('technology_familiarity', existing_project.get('technology_familiarity', 'Unknown'))),
+            "integration_complexity": str(row.get('integration_complexity', existing_project.get('integration_complexity', 'Unknown'))),
+            "technical_debt_level": str(row.get('technical_debt_level', existing_project.get('technical_debt_level', 'Unknown'))),
+            "tech_environment_stability": str(row.get('tech_environment_stability', existing_project.get('tech_environment_stability', 'Unknown'))),
+            "data_security_requirements": str(row.get('data_security_requirements', existing_project.get('data_security_requirements', 'Unknown'))),
+            "market_volatility": str(row.get('market_volatility', existing_project.get('market_volatility', 'Unknown'))),
+            "industry_volatility": str(row.get('industry_volatility', existing_project.get('industry_volatility', 'Unknown'))),
+            "geographical_distribution": str(row.get('geographical_distribution', existing_project.get('geographical_distribution', 'Unknown'))),
+            "client_experience_level": str(row.get('client_experience_level', existing_project.get('client_experience_level', 'Unknown'))),
+            "contract_type": str(row.get('contract_type', existing_project.get('contract_type', 'Unknown'))),
+            "resource_contention_level": str(row.get('resource_contention_level', existing_project.get('resource_contention_level', 'Unknown'))),
+            "schedule_pressure": str(row.get('schedule_pressure', existing_project.get('schedule_pressure', 'Unknown'))),
+            "priority_level": str(row.get('priority_level', existing_project.get('priority_level', 'Unknown'))),
+            "cross_functional_dependencies": self._safe_int(row.get('cross_functional_dependencies')) or existing_project.get('cross_functional_dependencies'),
+            "previous_delivery_success_rate": self._safe_float(row.get('previous_delivery_success_rate')) or existing_project.get('previous_delivery_success_rate'),
+            "documentation_quality": str(row.get('documentation_quality', existing_project.get('documentation_quality', 'Unknown'))),
+            "project_start_month": str(row.get('project_start_month', existing_project.get('project_start_month', 'Unknown'))),
+            "seasonal_risk_factor": self._safe_float(row.get('seasonal_risk_factor')) or existing_project.get('seasonal_risk_factor'),
+            "risk_level": str(row.get('risk_level', existing_project.get('risk_level', 'Unknown'))),
+            "updated_at": datetime.now().isoformat()
+        }
+        return update_data
 
     def _update_project_from_row(self, db: Client, project: Dict, row: pd.Series):
         """Update existing project with CSV row data"""

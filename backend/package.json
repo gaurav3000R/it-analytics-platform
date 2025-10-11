@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "uv sync && . .venv/bin/activate && uvicorn app.main:app --reload",
+    "dev": "uv sync --python python3.13 && . .venv/bin/activate && uvicorn app.main:app --reload",
     "build": "echo 'No build step for backend'",
     "test": "pytest",
     "clean": "rm -rf .venv"

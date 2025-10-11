@@ -12,6 +12,20 @@ from app.database import connect_db
 import argparse
 import traceback
 import pandas as pd
+import numpy as np#!/usr/bin/env python3
+"""
+Script to generate sample data for a SUBSET of projects
+Supports cost forecasting, anomaly detection, and utilization alerts
+"""
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).parent.parent))
+
+from app.database import connect_db
+import argparse
+import traceback
+import pandas as pd
 import numpy as np
 from datetime import datetime, timedelta
 from typing import Dict, List, Any
@@ -19,9 +33,40 @@ from supabase import Client
 import logging
 import uuid
 import random
+from dataclasses import dataclass
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)  # Set logging level to INFO for progress
+
+# ============================================================================
+# CONFIGURATION & CONSTANTS
+# ============================================================================
+
+@dataclass
+class Config:
+    """Configuration for data generation"""
+    num_employees: int = 35
+    num_projects: int = 100
+    start_date: str = "2024-01-01"
+    end_date: str = "2024-10-11"
+    anomaly_rate: float = 0.20  # 20% of employees will have anomalies
+    
+    # Business rules
+    working_days_per_week: int = 5
+    standard_hours_per_day: int = 8
+    max_hours_per_day: int = 16
+    max_projects_per_employee: int = 3
+    weekend_work_probability: float = 0.05
+    
+    # Anomaly probabilities
+    prob_underutilized: float = 0.08
+    prob_overutilized: float = 0.10
+    prob_chronic_underestimator: float = 0.12
+    prob_chronic_overestimator: float = 0.08
+    prob_sandbagger: float = 0.05
+    prob_zombie_task_creator: float = 0.07
+    prob_task_abandoner: float = 0.06
+
 
 def convert_numpy_types(obj):
     """Recursively convert numpy types to Python native types"""
@@ -38,7 +83,8 @@ def convert_numpy_types(obj):
 class SampleDataGenerator:
     """Generate realistic sample data for cost forecasting, anomaly detection, and resource utilization"""
 
-    def __init__(self):
+    def __init__(self, config: Config = None):
+        self.config = config if config is not None else Config()
         self.employee_patterns = {
             'consistent': {'reliability': 0.95, 'variance': 0.1},
             'inconsistent': {'reliability': 0.7, 'variance': 0.3},
@@ -48,12 +94,17 @@ class SampleDataGenerator:
     def generate_complete_sample_data(
         self, 
         db: Client, 
-        num_employees: int = 50,
+        num_employees: int = None,
         days_back: int = 90,
         selected_projects: List[Dict] = None
     ) -> Dict[str, Any]:
         """Generate complete sample data for selected projects"""
+        # Use config values if parameters not provided
+        if num_employees is None:
+            num_employees = self.config.num_employees
+            
         logger.info(f"Generating sample data: {num_employees} employees, {days_back} days")
+        logger.info(f"Config: anomaly_rate={self.config.anomaly_rate}, weekend_work_prob={self.config.weekend_work_probability}")
         
         if selected_projects is None:
             projects_response = db.table("projects").select(
@@ -139,12 +190,13 @@ class SampleDataGenerator:
             else:
                 hourly_rate = np.random.uniform(base_max * 0.8, base_max * 1.2)
             
+            # Use config for max hours calculation
             if 'Manager' in role or 'Lead' in role:
-                max_hours = np.random.uniform(6, 8)
+                max_hours = np.random.uniform(6, self.config.standard_hours_per_day)
             elif skill_level in ['Senior', 'Expert']:
-                max_hours = np.random.uniform(7, 9)
+                max_hours = np.random.uniform(7, self.config.standard_hours_per_day + 1)
             else:
-                max_hours = np.random.uniform(7.5, 8.5)
+                max_hours = np.random.uniform(7.5, self.config.standard_hours_per_day + 0.5)
             
             employee = {
                 'name': f"Employee_{i+1:03d}",
@@ -307,7 +359,8 @@ class SampleDataGenerator:
             log_date = datetime.now() - timedelta(days=days_ago)
             is_weekend = log_date.weekday() >= 5
             
-            if is_weekend and np.random.random() < 0.5:  # Reduced from 0.75 to 0.5
+            # Use config for weekend work probability
+            if is_weekend and np.random.random() < (1 - self.config.weekend_work_probability):
                 continue
             
             if days_ago % 5 == 0:
@@ -324,10 +377,10 @@ class SampleDataGenerator:
                 pattern = emp.get('pattern', 'consistent')
                 pattern_config = self.employee_patterns[pattern]
                 
-                if np.random.random() > pattern_config['reliability'] * np.random.uniform(0.95, 1.05):  # Increased reliability
+                if np.random.random() > pattern_config['reliability'] * np.random.uniform(0.95, 1.05):
                     continue
                 
-                num_projects = min(len(emp_assignments), np.random.randint(1, 4))
+                num_projects = min(len(emp_assignments), np.random.randint(1, self.config.max_projects_per_employee + 1))
                 selected_assignments = np.random.choice(emp_assignments, num_projects, replace=False)
                 
                 daily_total_hours = 0
@@ -365,7 +418,8 @@ class SampleDataGenerator:
                     hours_logged = max(0, round(hours_logged, 2))
                     
                     daily_total_hours += hours_logged
-                    if daily_total_hours > emp['max_hours_per_day'] * 1.2:
+                    # Use config for max hours limit
+                    if daily_total_hours > self.config.max_hours_per_day * 1.2:
                         hours_logged *= 0.8
                     
                     completion_percentage = self._calculate_completion_rate(hours_logged, expected_hours, pattern)
@@ -419,8 +473,11 @@ class SampleDataGenerator:
         return logs_created
     
     def _introduce_anomaly(self, emp: Dict, log_date: datetime, days_ago: int) -> str:
+        """Introduce anomalies based on config probabilities"""
         pattern = emp.get('pattern', 'consistent')
-        anomaly_prob = {'consistent': 0.05, 'inconsistent': 0.15, 'sporadic': 0.3}[pattern]
+        # Use config anomaly rate
+        base_prob = {'consistent': 0.05, 'inconsistent': 0.15, 'sporadic': 0.3}[pattern]
+        anomaly_prob = base_prob * self.config.anomaly_rate * 5  # Scale up to match config rate
         anomaly_prob *= np.random.uniform(0.8, 1.2)
         
         if np.random.random() < anomaly_prob:
@@ -461,7 +518,7 @@ class SampleDataGenerator:
     
     def _generate_sprints(self, db: Client, projects: List[Dict]) -> int:
         sprints_created = 0
-        batch_size = 100  # As per your update
+        batch_size = 100
         sprint_batch = []
         
         for proj_idx, project in enumerate(projects):
@@ -643,6 +700,37 @@ def main():
         action="store_true",
         help="Clear all operational data before generating"
     )
+    # Add config override arguments
+    parser.add_argument(
+        "--anomaly-rate",
+        type=float,
+        default=0.20,
+        help="Anomaly rate (0.0-1.0, default: 0.20 = 20%%)"
+    )
+    parser.add_argument(
+        "--standard-hours",
+        type=int,
+        default=8,
+        help="Standard hours per day (default: 8)"
+    )
+    parser.add_argument(
+        "--max-hours",
+        type=int,
+        default=16,
+        help="Maximum hours per day (default: 16)"
+    )
+    parser.add_argument(
+        "--weekend-work-prob",
+        type=float,
+        default=0.05,
+        help="Probability of weekend work (0.0-1.0, default: 0.05 = 5%%)"
+    )
+    parser.add_argument(
+        "--max-projects-per-employee",
+        type=int,
+        default=3,
+        help="Maximum projects an employee can work on simultaneously (default: 3)"
+    )
     
     args = parser.parse_args()
     
@@ -653,6 +741,11 @@ def main():
     print(f"Days of history: {args.days}")
     print(f"Max projects: {args.max_projects}")
     print(f"Selection method: {args.project_selection}")
+    print(f"Anomaly rate: {args.anomaly_rate * 100}%")
+    print(f"Standard hours/day: {args.standard_hours}")
+    print(f"Max hours/day: {args.max_hours}")
+    print(f"Max projects/employee: {args.max_projects_per_employee}")
+    print(f"Weekend work probability: {args.weekend_work_prob * 100}%")
     
     estimated_logs = args.max_projects * args.days * 4
     print(f"\n📊 Estimated daily log records: ~{estimated_logs:,}")
@@ -759,7 +852,17 @@ def main():
     print(f"   This may take a few minutes...")
     
     try:
-        generator = SampleDataGenerator()
+        # Create config with command-line overrides
+        config = Config(
+            num_employees=args.employees,
+            anomaly_rate=args.anomaly_rate,
+            standard_hours_per_day=args.standard_hours,
+            max_hours_per_day=args.max_hours,
+            max_projects_per_employee=args.max_projects_per_employee,
+            weekend_work_probability=args.weekend_work_prob
+        )
+        
+        generator = SampleDataGenerator(config)
         
         results = generator.generate_complete_sample_data(
             db,
@@ -776,6 +879,12 @@ def main():
         print(f"Daily logs created: {results['logs_created']}")
         print(f"Sprints created: {results['sprints_created']}")
         print(f"Projects updated: {results['projects_used']}")
+        print("\nConfiguration used:")
+        print(f"  Anomaly rate: {config.anomaly_rate * 100}%")
+        print(f"  Standard hours: {config.standard_hours_per_day}h/day")
+        print(f"  Max hours: {config.max_hours_per_day}h/day")
+        print(f"  Max projects/employee: {config.max_projects_per_employee}")
+        print(f"  Weekend work: {config.weekend_work_probability * 100}%")
         print("\nYou can now:")
         print("  1. Start the server: python main.py --run-server")
         print("  2. Test cost forecasting API:")
