@@ -2,19 +2,29 @@ import { apiClient } from './api-client'
 import { API_ENDPOINTS } from '@/lib/constants'
 import type {
   Project,
-  AnalyticsOverview,
-  RiskDashboard,
-  AIRiskAnalysis,
-  AIRecommendations,
-  AIPortfolioTrends,
-  AIExecutiveSummary,
-  BugAnalysis,
-  ResourceAnalysis,
-  RebalancingSuggestion,
-  CostForecast,
-  BudgetAlert,
+  ProjectsListResponse,
+  ProjectCSVSummaryResponse,
+  AnalyticsOverviewResponse,
+  RiskDashboardResponse,
+  RiskDashboardOverviewResponse,
+  RiskStatisticsResponse,
+  RiskDashboardProjectsResponse,
+  RiskTrendsResponse,
+  FlaggedProjectsResponse,
+  AIExecutiveSummaryResponse,
+  AIPortfolioTrendsResponse,
+  AIServiceStatusResponse,
+  BugTrackerDashboardResponse,
+  BugTrackerListResponse,
+  BugQualityRisksResponse,
+  BugResolutionMetricsResponse,
+  ResourceUtilizationDashboardResponse,
+  ResourceUtilizationAlertsResponse,
+  CostSpendingTrendsResponse,
+  AnomaliesDashboardResponse,
+  AnomaliesListResponse,
+  HealthResponse,
 } from '@/types'
-
 
 export const projectsApi = {
   getAll: () => apiClient.get<Project[]>(API_ENDPOINTS.PROJECTS),
@@ -33,12 +43,20 @@ export const projectsApi = {
       { count }
     ),
   getCsvSummary: () =>
-    apiClient.get<{ total_rows: number; columns: string[] }>(API_ENDPOINTS.CSV_SUMMARY),
+    apiClient.get<ProjectCSVSummaryResponse>(API_ENDPOINTS.CSV_SUMMARY),
 }
 
 export const analyticsApi = {
-  getOverview: () => apiClient.get<AnalyticsOverview>(API_ENDPOINTS.ANALYTICS_OVERVIEW),
-  getRiskDashboard: () => apiClient.get<RiskDashboard>(API_ENDPOINTS.RISK_DASHBOARD),
+  getOverview: () => apiClient.get<AnalyticsOverviewResponse>(API_ENDPOINTS.ANALYTICS_OVERVIEW),
+  getRiskDashboard: () => apiClient.get<RiskDashboardResponse>(API_ENDPOINTS.RISK_DASHBOARD),
+}
+
+export const riskDashboardApi = {
+  getOverview: () => apiClient.get<RiskDashboardOverviewResponse>(API_ENDPOINTS.RISK_DASHBOARD_OVERVIEW),
+  getStatistics: () => apiClient.get<RiskStatisticsResponse>(API_ENDPOINTS.RISK_DASHBOARD_STATISTICS),
+  getProjects: () => apiClient.get<RiskDashboardProjectsResponse>(API_ENDPOINTS.RISK_DASHBOARD_PROJECTS),
+  getTrends: (days?: number) => apiClient.get<RiskTrendsResponse>(`${API_ENDPOINTS.RISK_DASHBOARD_TRENDS}${days ? `?days=${days}` : ''}`),
+  getFlaggedProjects: () => apiClient.get<FlaggedProjectsResponse>(API_ENDPOINTS.RISK_DASHBOARD_FLAGGED_PROJECTS),
 }
 
 export const risksApi = {
@@ -47,74 +65,70 @@ export const risksApi = {
     apiClient.get<{ project_id: string; risk_score: number; risk_factors: Record<string, unknown> }>(
       API_ENDPOINTS.RISKS_PREDICT(projectId)
     ),
-  getDashboard: () => apiClient.get<RiskDashboard>(API_ENDPOINTS.RISKS_DASHBOARD),
-  detectAnomalies: () => apiClient.post<any>(API_ENDPOINTS.RISKS_DETECT_ANOMALIES),
+  getDashboard: () => apiClient.get<{ total_projects: number; high_risk_projects: number; medium_risk_projects: number; low_risk_projects: number; projects: Project[] }>(API_ENDPOINTS.RISKS_DASHBOARD),
+  detectAnomalies: () => apiClient.post<{ message: string; anomalies_detected: number }>(API_ENDPOINTS.RISKS_DETECT_ANOMALIES),
   getAnomaliesByProject: (projectId: string) =>
-    apiClient.get<any>(API_ENDPOINTS.RISKS_ANOMALIES_PROJECT(projectId)),
+    apiClient.get<AnomaliesListResponse>(API_ENDPOINTS.RISKS_ANOMALIES_PROJECT(projectId)),
   getAnomaliesByEmployee: (employeeId: string) =>
-    apiClient.get<any>(API_ENDPOINTS.RISKS_ANOMALIES_EMPLOYEE(employeeId)),
-  getAnomaliesDashboard: () => apiClient.get<any>(API_ENDPOINTS.RISKS_ANOMALIES_DASHBOARD),
-  getAnomaliesList: () => apiClient.get<any>(API_ENDPOINTS.RISKS_ANOMALIES_LIST),
+    apiClient.get<AnomaliesListResponse>(API_ENDPOINTS.RISKS_ANOMALIES_EMPLOYEE(employeeId)),
+  getAnomaliesDashboard: () => apiClient.get<AnomaliesDashboardResponse>(API_ENDPOINTS.RISKS_ANOMALIES_DASHBOARD),
+  getAnomaliesList: () => apiClient.get<AnomaliesListResponse>(API_ENDPOINTS.RISKS_ANOMALIES_LIST),
 }
 
 export const aiInsightsApi = {
-  getRiskAnalysis: (projectId: string) =>
-    apiClient.post<AIRiskAnalysis>(API_ENDPOINTS.AI_RISK_ANALYSIS(projectId)),
-  getRecommendations: (projectId: string) =>
-    apiClient.post<AIRecommendations>(API_ENDPOINTS.AI_RECOMMENDATIONS(projectId)),
-  getPortfolioTrends: () =>
-    apiClient.get<AIPortfolioTrends>(API_ENDPOINTS.AI_PORTFOLIO_TRENDS),
   getExecutiveSummary: () =>
-    apiClient.get<AIExecutiveSummary>(API_ENDPOINTS.AI_EXECUTIVE_SUMMARY),
+    apiClient.get<AIExecutiveSummaryResponse>(API_ENDPOINTS.AI_EXECUTIVE_SUMMARY),
+  getPortfolioTrends: () =>
+    apiClient.get<AIPortfolioTrendsResponse>(API_ENDPOINTS.AI_PORTFOLIO_TRENDS),
+  getServiceStatus: () =>
+    apiClient.get<AIServiceStatusResponse>(API_ENDPOINTS.AI_SERVICE_STATUS),
   getProjectInsights: (projectId: string) =>
-    apiClient.get<any>(API_ENDPOINTS.AI_PROJECT_INSIGHTS(projectId)),
-  getDashboard: () => apiClient.get<any>(API_ENDPOINTS.AI_DASHBOARD),
+    apiClient.get<Record<string, unknown>>(API_ENDPOINTS.AI_PROJECT_INSIGHTS(projectId)),
+  getDashboard: () => apiClient.get<Record<string, unknown>>(API_ENDPOINTS.AI_DASHBOARD),
 }
 
 export const bugTrackerApi = {
-  analyzeProject: (projectId: string) =>
-    apiClient.get<BugAnalysis>(API_ENDPOINTS.BUG_ANALYSIS(projectId)),
-  analyzePortfolio: () =>
-    apiClient.get<{ total_bugs: number; projects_analyzed: number; summary: Record<string, unknown> }>(
-      API_ENDPOINTS.BUG_PORTFOLIO_ANALYSIS
-    ),
-  getDashboard: () => apiClient.get<any>(API_ENDPOINTS.BUG_DASHBOARD),
+  getDashboard: () => apiClient.get<BugTrackerDashboardResponse>(API_ENDPOINTS.BUG_DASHBOARD),
+  getList: (page?: number, perPage?: number) => {
+    const params = new URLSearchParams()
+    if (page) params.append('page', page.toString())
+    if (perPage) params.append('per_page', perPage.toString())
+    const query = params.toString()
+    return apiClient.get<BugTrackerListResponse>(`${API_ENDPOINTS.BUG_LIST}${query ? `?${query}` : ''}`)
+  },
+  getQualityRisks: () => apiClient.get<BugQualityRisksResponse>(API_ENDPOINTS.BUG_QUALITY_RISKS),
+  getResolutionMetrics: () => apiClient.get<BugResolutionMetricsResponse>(API_ENDPOINTS.BUG_RESOLUTION_METRICS),
 }
 
 export const resourceApi = {
-  analyze: () => apiClient.get<ResourceAnalysis>(API_ENDPOINTS.RESOURCE_ANALYZE),
-  getRebalancingSuggestions: () =>
-    apiClient.get<{ suggestions: RebalancingSuggestion[]; total_suggestions: number }>(
-      API_ENDPOINTS.RESOURCE_REBALANCING
-    ),
-  getEmployee: (employeeId: string) =>
-    apiClient.get<any>(API_ENDPOINTS.RESOURCE_EMPLOYEE(employeeId)),
-  getAlerts: () => apiClient.get<any>(API_ENDPOINTS.RESOURCE_ALERTS),
+  getDashboard: () => apiClient.get<ResourceUtilizationDashboardResponse>(API_ENDPOINTS.RESOURCE_DASHBOARD),
+  getAlerts: () => apiClient.get<ResourceUtilizationAlertsResponse>(API_ENDPOINTS.RESOURCE_ALERTS),
   acknowledgeAlert: (alertId: string) =>
-    apiClient.post<any>(API_ENDPOINTS.RESOURCE_ALERT_ACKNOWLEDGE(alertId)),
-  getDashboard: () => apiClient.get<any>(API_ENDPOINTS.RESOURCE_DASHBOARD),
-  getOverbookingReport: () => apiClient.get<any>(API_ENDPOINTS.RESOURCE_OVERBOOKING_REPORT),
+    apiClient.post<{ message: string }>(API_ENDPOINTS.RESOURCE_ALERT_ACKNOWLEDGE(alertId)),
+  getEmployee: (employeeId: string) =>
+    apiClient.get<Record<string, unknown>>(API_ENDPOINTS.RESOURCE_EMPLOYEE(employeeId)),
+  getOverbookingReport: () => apiClient.get<Record<string, unknown>>(API_ENDPOINTS.RESOURCE_OVERBOOKING_REPORT),
 }
 
 export const costApi = {
-  getForecast: (projectId: string) =>
-    apiClient.get<CostForecast>(API_ENDPOINTS.COST_FORECAST(projectId)),
-
-  getBudgetAlerts: () =>
-    apiClient.get<{ alerts: BudgetAlert[]; total_alerts: number }>(
-      API_ENDPOINTS.COST_BUDGET_ALERTS
-    ),
-  getPortfolioSummary: () => apiClient.get<any>(API_ENDPOINTS.COST_PORTFOLIO_SUMMARY),
+  getSpendingTrends: (projectId?: string) => {
+    const endpoint = projectId 
+      ? `${API_ENDPOINTS.COST_SPENDING_TRENDS}/${projectId}`
+      : API_ENDPOINTS.COST_SPENDING_TRENDS
+    return apiClient.get<CostSpendingTrendsResponse>(endpoint)
+  },
   getForecastHistory: (projectId: string) =>
-    apiClient.get<any>(API_ENDPOINTS.COST_FORECAST_HISTORY(projectId)),
-  getSpendingTrends: (projectId: string) =>
-    apiClient.get<any>(API_ENDPOINTS.COST_SPENDING_TRENDS(projectId)),
+    apiClient.get<Record<string, unknown>>(API_ENDPOINTS.COST_FORECAST_HISTORY(projectId)),
+}
+
+export const healthApi = {
+  getHealth: () => apiClient.get<HealthResponse>(API_ENDPOINTS.HEALTH),
 }
 
 export const mlApi = {
-  getHealth: () => apiClient.get<any>(API_ENDPOINTS.ML_HEALTH),
-  getModelInfo: () => apiClient.get<any>(API_ENDPOINTS.ML_MODEL_INFO),
-  predict: (data: any) => apiClient.post<any>(API_ENDPOINTS.ML_PREDICT, data),
-  predictBatch: (data: any) => apiClient.post<any>(API_ENDPOINTS.ML_PREDICT_BATCH, data),
-  analyze: (data: any) => apiClient.post<any>(API_ENDPOINTS.ML_ANALYZE, data),
+  getHealth: () => apiClient.get<Record<string, unknown>>(API_ENDPOINTS.ML_HEALTH),
+  getModelInfo: () => apiClient.get<Record<string, unknown>>(API_ENDPOINTS.ML_MODEL_INFO),
+  predict: (data: Record<string, unknown>) => apiClient.post<Record<string, unknown>>(API_ENDPOINTS.ML_PREDICT, data),
+  predictBatch: (data: Record<string, unknown>) => apiClient.post<Record<string, unknown>>(API_ENDPOINTS.ML_PREDICT_BATCH, data),
+  analyze: (data: Record<string, unknown>) => apiClient.post<Record<string, unknown>>(API_ENDPOINTS.ML_ANALYZE, data),
 }

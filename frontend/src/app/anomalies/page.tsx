@@ -12,6 +12,17 @@ import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, BarChart, Bar, XAxis
 import { risksApi, projectsApi } from '@/services/api'
 import { QUERY_KEYS } from '@/lib/constants'
 import toast from 'react-hot-toast'
+import type { Anomaly, Project } from '@/types'
+
+interface EmployeeAnomalyItem {
+  employee: string
+  count: number
+}
+
+interface ProjectAnomalyItem {
+  project: string
+  count: number
+}
 
 export default function AnomaliesPage() {
   const [severityFilter, setSeverityFilter] = useState<string>('')
@@ -41,7 +52,7 @@ export default function AnomaliesPage() {
       }),
       {
         loading: 'Detecting anomalies...',
-        success: (data: any) => `Detected ${data?.total_anomalies || 0} anomalies!`,
+        success: (data) => `Detected ${data?.anomalies_detected || 0} anomalies!`,
         error: 'Failed to detect anomalies',
       }
     )
@@ -71,8 +82,8 @@ export default function AnomaliesPage() {
     )
   }
 
-  const severityData = anomaliesDashboard?.summary?.by_severity || {}
-  const typeData = anomaliesDashboard?.summary?.by_type || {}
+  const severityData = anomaliesDashboard?.by_severity || {}
+  const typeData = anomaliesDashboard?.by_type || {}
 
   const severityChartData = Object.entries(severityData).map(([name, value]) => ({
     name: name.charAt(0).toUpperCase() + name.slice(1),
@@ -88,7 +99,7 @@ export default function AnomaliesPage() {
     value: value as number,
   }))
 
-  const filteredAnomalies = anomaliesList?.anomalies?.filter((a: any) => {
+  const filteredAnomalies = anomaliesList?.anomalies?.filter((a) => {
     if (severityFilter && a.severity !== severityFilter) return false
     if (typeFilter && a.type !== typeFilter) return false
     if (projectFilter && a.project?.id?.toString() !== projectFilter) return false
@@ -223,7 +234,7 @@ export default function AnomaliesPage() {
             <CardHeader><CardTitle>Top Employees with Anomalies</CardTitle></CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {anomaliesDashboard?.top_employees_with_anomalies?.slice(0, 8).map((item: any, i: number) => (
+                {anomaliesDashboard?.top_employees_with_anomalies?.slice(0, 8).map((item: EmployeeAnomalyItem, i: number) => (
                   <div key={i} className="flex items-center justify-between p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-500 to-red-500 flex items-center justify-center font-bold">
@@ -245,7 +256,7 @@ export default function AnomaliesPage() {
             <CardHeader><CardTitle>Top Projects with Anomalies</CardTitle></CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {anomaliesDashboard?.top_projects_with_anomalies?.slice(0, 8).map((item: any, i: number) => (
+                {anomaliesDashboard?.top_projects_with_anomalies?.slice(0, 8).map((item: ProjectAnomalyItem, i: number) => (
                   <div key={i} className="flex items-center justify-between p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors">
                     <span className="font-medium">{item.project}</span>
                     <Badge variant="secondary" className="bg-red-500/20 text-red-400">
@@ -270,7 +281,7 @@ export default function AnomaliesPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {anomaliesDashboard?.recent_critical_anomalies?.slice(0, 10).map((anomaly: any, i: number) => (
+              {anomaliesDashboard?.recent_critical_anomalies?.slice(0, 10).map((anomaly: Anomaly, i: number) => (
                 <motion.div
                   key={anomaly.id}
                   initial={{ opacity: 0, x: -20 }}
@@ -340,7 +351,7 @@ export default function AnomaliesPage() {
                   onChange={(e) => setProjectFilter(e.target.value)}
                 >
                   <option value="">All Projects</option>
-                  {projects?.slice(0, 20).map((project: any) => (
+                  {projects?.slice(0, 20).map((project: Project) => (
                     <option key={project.id} value={project.id}>
                       {project.project_id}
                     </option>
@@ -351,7 +362,7 @@ export default function AnomaliesPage() {
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {filteredAnomalies.slice(0, 30).map((anomaly: any, i: number) => (
+              {filteredAnomalies.slice(0, 30).map((anomaly: Anomaly, i: number) => (
                 <div
                   key={i}
                   className={`p-4 rounded-lg border ${

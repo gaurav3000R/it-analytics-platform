@@ -13,6 +13,13 @@ export const API_ENDPOINTS = {
   ANALYTICS_OVERVIEW: '/api/v1/analytics/overview',
   RISK_DASHBOARD: '/api/v1/analytics/risk-dashboard',
 
+  // Risk Dashboard
+  RISK_DASHBOARD_OVERVIEW: '/api/v1/risk-dashboard/overview',
+  RISK_DASHBOARD_STATISTICS: '/api/v1/risk-dashboard/statistics',
+  RISK_DASHBOARD_PROJECTS: '/api/v1/risk-dashboard/projects',
+  RISK_DASHBOARD_TRENDS: '/api/v1/risk-dashboard/trends',
+  RISK_DASHBOARD_FLAGGED_PROJECTS: '/api/v1/risk-dashboard/flagged-projects',
+
   // Risks
   RISKS_TRAIN_MODEL: '/api/v1/risks/train-model',
   RISKS_PREDICT: (projectId: string) => `/api/v1/risks/predict/${projectId}`,
@@ -28,6 +35,7 @@ export const API_ENDPOINTS = {
   AI_RECOMMENDATIONS: (projectId: string) => `/api/v1/ai-insights/recommendations/${projectId}`,
   AI_PORTFOLIO_TRENDS: '/api/v1/ai-insights/portfolio-trends',
   AI_EXECUTIVE_SUMMARY: '/api/v1/ai-insights/executive-summary',
+  AI_SERVICE_STATUS: '/api/v1/ai-insights/service-status',
   AI_PROJECT_INSIGHTS: (projectId: string) => `/api/v1/ai-insights/project/${projectId}/insights`,
   AI_DASHBOARD: '/api/v1/ai-insights/dashboard',
 
@@ -35,6 +43,9 @@ export const API_ENDPOINTS = {
   BUG_ANALYSIS: (projectId: string) => `/api/v1/bug-tracker/analyze/${projectId}`,
   BUG_PORTFOLIO_ANALYSIS: '/api/v1/bug-tracker/portfolio-analysis',
   BUG_DASHBOARD: '/api/v1/bug-tracker/dashboard',
+  BUG_LIST: '/api/v1/bug-tracker/list',
+  BUG_QUALITY_RISKS: '/api/v1/bug-tracker/quality-risks',
+  BUG_RESOLUTION_METRICS: '/api/v1/bug-tracker/metrics/resolution',
 
   // Resource Utilization
   RESOURCE_ANALYZE: '/api/v1/resource-utilization/analyze',
@@ -50,7 +61,10 @@ export const API_ENDPOINTS = {
   COST_BUDGET_ALERTS: '/api/v1/cost-forecasting/budget-alerts',
   COST_PORTFOLIO_SUMMARY: '/api/v1/cost-forecasting/portfolio-summary',
   COST_FORECAST_HISTORY: (projectId: string) => `/api/v1/cost-forecasting/forecast-history/${projectId}`,
-  COST_SPENDING_TRENDS: (projectId: string) => `/api/v1/cost-forecasting/spending-trends/${projectId}`,
+  COST_SPENDING_TRENDS: '/api/v1/cost-forecasting/spending-trends',
+
+  // Health
+  HEALTH: '/health',
 
   // ML Predictions
   ML_HEALTH: '/api/v1/ml-predictions/health',

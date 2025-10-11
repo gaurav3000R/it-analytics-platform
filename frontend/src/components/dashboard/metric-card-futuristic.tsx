@@ -6,6 +6,7 @@ interface MetricCardProps {
   title: string;
   value: string | number;
   change?: number;
+  subtitle?: string;
   icon?: React.ReactNode;
   color?: 'cyan' | 'purple' | 'pink' | 'green';
   loading?: boolean;
@@ -15,6 +16,7 @@ export const MetricCardFuturistic: React.FC<MetricCardProps> = ({
   title,
   value,
   change,
+  subtitle,
   icon,
   color = 'cyan',
   loading = false,
@@ -88,6 +90,12 @@ export const MetricCardFuturistic: React.FC<MetricCardProps> = ({
         <div className="text-gray-900 text-4xl md:text-5xl font-bold mb-3 tracking-tight">
           {value}
         </div>
+        
+        {subtitle && !change && (
+          <div className="text-sm font-medium text-gray-600">
+            {subtitle}
+          </div>
+        )}
         
         {change !== undefined && (
           <div className={cn(
