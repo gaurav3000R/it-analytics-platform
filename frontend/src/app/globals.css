@@ -6,7 +6,7 @@
    ==================================== */
 
 @theme {
-  /* Professional Color Palette - Design System */
+  /* Futuristic Color Palette 2025-2030 */
   --color-background: #0d1117;
   --color-foreground: #e6edf3;
   --color-primary: #3b82f6;
@@ -22,6 +22,23 @@
   --color-success: #3fb950;
   --color-warning: #f0b429;
   --color-info: #58a6ff;
+  
+  /* Neo Futuristic Colors */
+  --color-neo-blue-900: #0A0E27;
+  --color-neo-blue-800: #0D1829;
+  --color-neo-blue-700: #1A2332;
+  --color-neo-blue-600: #2D3D54;
+  
+  --color-cyber-cyan-500: #00F5FF;
+  --color-cyber-cyan-400: #33F7FF;
+  --color-cyber-cyan-300: #66F9FF;
+  
+  --color-neon-purple-500: #A855F7;
+  --color-neon-purple-400: #C084FC;
+  --color-neon-purple-300: #D8B4FE;
+  
+  --color-electric-pink-500: #EC4899;
+  --color-electric-pink-400: #F472B6;
   
   /* UI Element Colors */
   --color-border: #30363d;
@@ -175,6 +192,24 @@
     }
     50% {
       transform: translateY(-5px);
+    }
+  }
+  
+  @keyframes float {
+    0%, 100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-10px);
+    }
+  }
+  
+  @keyframes glow-pulse {
+    0%, 100% {
+      box-shadow: 0 0 20px rgba(0, 245, 255, 0.4);
+    }
+    50% {
+      box-shadow: 0 0 40px rgba(0, 245, 255, 0.8);
     }
   }
   
@@ -369,6 +404,48 @@
       transparent 100%
     );
     background-size: 1000px 100%;
+  }
+  
+  /* Futuristic Glass Effects */
+  .glass-card {
+    @apply bg-white/[0.05] backdrop-blur-2xl border border-white/10;
+  }
+  
+  .glass-card-hover {
+    @apply transition-all duration-300;
+    @apply hover:bg-white/[0.08] hover:border-cyan-500/50;
+  }
+  
+  /* Gradient Text Cyber */
+  .gradient-text-cyber {
+    @apply bg-gradient-to-r from-[#00F5FF] via-[#A855F7] to-[#EC4899];
+    @apply bg-clip-text text-transparent;
+  }
+  
+  /* Neon Glow Effects */
+  .glow-cyan {
+    box-shadow: 0 0 20px rgba(0, 245, 255, 0.4);
+  }
+  
+  .glow-cyan-lg {
+    box-shadow: 0 0 40px rgba(0, 245, 255, 0.6), 0 0 80px rgba(0, 245, 255, 0.3);
+  }
+  
+  .glow-purple {
+    box-shadow: 0 0 20px rgba(168, 85, 247, 0.4);
+  }
+  
+  .glow-pink {
+    box-shadow: 0 0 20px rgba(236, 72, 153, 0.4);
+  }
+  
+  /* Float Animation */
+  .animate-float {
+    animation: float 3s ease-in-out infinite;
+  }
+  
+  .animate-glow-pulse {
+    animation: glow-pulse 2s ease-in-out infinite;
   }
   
   /* Text Balance */

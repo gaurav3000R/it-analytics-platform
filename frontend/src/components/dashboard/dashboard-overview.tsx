@@ -2,36 +2,30 @@
 
 import React from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { motion } from 'framer-motion'
+import Link from 'next/link'
 import {
-  Activity,
+  FolderKanban,
   AlertTriangle,
-  TrendingUp,
+  DollarSign,
   Users,
-  Clock,
-  CheckCircle,
-  ArrowUp,
-  ArrowDown,
+  TrendingUp,
 } from 'lucide-react'
 import { analyticsApi, projectsApi } from '@/services/api'
 import { QUERY_KEYS } from '@/lib/constants'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { formatNumber } from '@/lib/utils'
-import { ProjectsTable } from './projects-table'
+import { ButtonFuturistic } from '@/components/ui/button-futuristic'
+import { MetricCardFuturistic } from './metric-card-futuristic'
+import { ProjectCardFuturistic } from './project-card-futuristic'
+import { GlassCard } from '@/components/ui/glass-card'
+import { cn } from '@/lib/utils'
 import { RiskChart } from './risk-chart'
 import { AlertsList } from './alerts-list'
-import toast from 'react-hot-toast'
+import { useRouter } from 'next/navigation'
 
 export function DashboardOverview() {
-  const { data: overview, isLoading: overviewLoading, error: overviewError, refetch: refetchOverview } = useQuery({
+  const router = useRouter()
+  const { data: overview, isLoading: overviewLoading } = useQuery({
     queryKey: QUERY_KEYS.ANALYTICS_OVERVIEW,
     queryFn: analyticsApi.getOverview,
-  })
-
-  const { data: _riskDashboard, isLoading: riskLoading, refetch: refetchRisk } = useQuery({
-    queryKey: QUERY_KEYS.RISK_DASHBOARD,
-    queryFn: analyticsApi.getRiskDashboard,
   })
 
   const { data: projects, isLoading: projectsLoading } = useQuery({
@@ -39,298 +33,146 @@ export function DashboardOverview() {
     queryFn: projectsApi.getAll,
   })
 
-  const isLoading = overviewLoading || riskLoading || projectsLoading
-
-  const handleRefresh = async () => {
-    toast.promise(
-      Promise.all([refetchOverview(), refetchRisk()]),
-      {
-        loading: 'Refreshing data...',
-        success: 'Data refreshed successfully!',
-        error: 'Failed to refresh data',
-      }
-    )
-  }
+  const isLoading = overviewLoading || projectsLoading
+  
+  // Sample data for metrics
+  const totalProjects = projects?.length || overview?.summary?.total_projects || 0
+  const highRiskProjects = overview?.high_risk_projects || 0
+  const totalBudget = overview?.summary?.total_budget || 0
+  const totalTeamMembers = overview?.summary?.total_employees || 0
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="text-center space-y-4">
-          <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto" />
-          <p className="text-gray-400">Loading analytics...</p>
-        </div>
-      </div>
-    )
+    return <DashboardSkeleton />
   }
-
-  if (overviewError) {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <Card className="max-w-md">
-          <CardContent className="pt-6">
-            <div className="text-center space-y-4">
-              <AlertTriangle className="w-12 h-12 text-red-500 mx-auto" />
-              <h2 className="text-xl font-bold">Error Loading Data</h2>
-              <p className="text-gray-400">
-                {overviewError instanceof Error ? overviewError.message : 'Failed to load dashboard data'}
-              </p>
-              <Button onClick={handleRefresh}>Try Again</Button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    )
-  }
-
-  const stats = [
-    {
-      icon: Activity,
-      title: 'Total Projects',
-      value: overview?.summary?.total_projects || projects?.length || 0,
-      change: '+12%',
-      positive: true,
-      color: 'from-blue-500 to-cyan-500',
-      description: 'Active projects in portfolio'
-    },
-    {
-      icon: Users,
-      title: 'Team Members',
-      value: overview?.summary?.total_employees || 0,
-      change: '+5%',
-      positive: true,
-      color: 'from-purple-500 to-pink-500',
-      description: 'Active team members'
-    },
-    {
-      icon: AlertTriangle,
-      title: 'Anomalies Detected',
-      value: overview?.summary?.recent_anomalies || 0,
-      change: '-3%',
-      positive: false,
-      color: 'from-red-500 to-orange-500',
-      description: 'System anomalies detected'
-    },
-    {
-      icon: Clock,
-      title: 'Activity Logs',
-      value: overview?.summary?.recent_activity_logs || 0,
-      change: '+15%',
-      positive: true,
-      color: 'from-green-500 to-emerald-500',
-      description: 'Recent activity entries'
-    },
-  ]
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
+    <div className="space-y-8">
+      {/* Page Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-4xl font-bold gradient-text mb-2">
-            Operational Risk Early Warning System
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400 bg-clip-text text-transparent mb-2">
+            Dashboard Overview
           </h1>
-          <p className="text-gray-400">AI-Powered IT Services Project Analytics</p>
+          <p className="text-gray-400">
+            Real-time insights and analytics for your IT portfolio
+          </p>
         </div>
-        <Button onClick={handleRefresh} variant="outline">
-          <Activity className="h-4 w-4 mr-2" />
-          Refresh
-        </Button>
+        
+        <ButtonFuturistic variant="primary" size="md">
+          <TrendingUp className="w-5 h-5 mr-2" />
+          Generate Report
+        </ButtonFuturistic>
       </div>
-
-      {/* Stats Grid */}
+      
+      {/* Metrics Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {stats.map((stat, index) => (
-          <motion.div
-            key={stat.title}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3, delay: index * 0.1 }}
-          >
-            <StatCard {...stat} />
-          </motion.div>
-        ))}
-      </div>
-
-      {/* Risk Distribution & System Status */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <motion.div
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.3, delay: 0.4 }}
-        >
-          <Card hover>
-            <CardHeader>
-              <CardTitle>Risk Distribution</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <RiskBar
-                label="High Risk"
-                count={overview?.high_risk_projects || 0}
-                total={overview?.total_projects || 1}
-                color="bg-red-500"
-              />
-              <RiskBar
-                label="Medium Risk"
-                count={overview?.medium_risk_projects || 0}
-                total={overview?.total_projects || 1}
-                color="bg-yellow-500"
-              />
-              <RiskBar
-                label="Low Risk"
-                count={overview?.low_risk_projects || 0}
-                total={overview?.total_projects || 1}
-                color="bg-green-500"
-              />
-            </CardContent>
-          </Card>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3, delay: 0.5 }}
-          className="lg:col-span-2"
-        >
-          <Card hover>
-            <CardHeader>
-              <CardTitle>System Status</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 gap-4">
-                <StatusItem
-                  icon={<CheckCircle className="h-5 w-5" />}
-                  label="Anomaly Detection"
-                  status="Active"
-                  color="text-green-400"
-                />
-                <StatusItem
-                  icon={<CheckCircle className="h-5 w-5" />}
-                  label="Risk Prediction"
-                  status="Active"
-                  color="text-green-400"
-                />
-                <StatusItem
-                  icon={<Clock className="h-5 w-5" />}
-                  label="Last Sync"
-                  status="2 min ago"
-                  color="text-blue-400"
-                />
-                <StatusItem
-                  icon={<Activity className="h-5 w-5" />}
-                  label="Data Quality"
-                  status="98%"
-                  color="text-green-400"
-                />
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
-      </div>
-
-      {/* Charts & Alerts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <motion.div
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.3, delay: 0.6 }}
-        >
-          <RiskChart data={overview?.trending_risks || []} />
-        </motion.div>
-        <motion.div
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.3, delay: 0.6 }}
-        >
-          <AlertsList alerts={overview?.recent_anomalies || []} />
-        </motion.div>
-      </div>
-
-      {/* Projects Table */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3, delay: 0.7 }}
-      >
-        <ProjectsTable projects={projects || []} />
-      </motion.div>
-    </div>
-  )
-}
-
-interface StatCardProps {
-  icon: React.ElementType
-  title: string
-  value: string | number
-  change: string
-  positive: boolean
-  color: string
-  description?: string
-}
-
-function StatCard({ icon: Icon, title, value, change, positive, color, description }: StatCardProps) {
-  return (
-    <Card hover glow>
-      <CardContent className="p-6">
-        <div className="flex items-start justify-between mb-4">
-          <div className={`p-3 rounded-xl bg-gradient-to-br ${color} bg-opacity-20`}>
-            <Icon className="h-6 w-6 text-white" />
-          </div>
-          <div className={`flex items-center gap-1 text-sm font-medium ${positive ? 'text-green-400' : 'text-red-400'}`}>
-            {positive ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />}
-            {change}
-          </div>
-        </div>
-        <h3 className="text-gray-400 text-sm mb-1">{title}</h3>
-        <p className="text-3xl font-bold mb-2">{formatNumber(Number(value))}</p>
-        {description && <p className="text-xs text-gray-500">{description}</p>}
-      </CardContent>
-    </Card>
-  )
-}
-
-interface RiskBarProps {
-  label: string
-  count: number
-  total: number
-  color: string
-}
-
-function RiskBar({ label, count, total, color }: RiskBarProps) {
-  const percentage = (count / total) * 100
-
-  return (
-    <div>
-      <div className="flex justify-between text-sm mb-2">
-        <span className="text-gray-400">{label}</span>
-        <span className="font-medium">{count}</span>
-      </div>
-      <div className="w-full bg-white/10 rounded-full h-2 overflow-hidden">
-        <motion.div
-          initial={{ width: 0 }}
-          animate={{ width: `${percentage}%` }}
-          transition={{ duration: 0.5, ease: 'easeOut' }}
-          className={`${color} h-2 rounded-full`}
+        <MetricCardFuturistic
+          title="Total Projects"
+          value={totalProjects}
+          change={12.5}
+          icon={<FolderKanban className="w-5 h-5" />}
+          color="cyan"
+          loading={isLoading}
+        />
+        <MetricCardFuturistic
+          title="High Risk Projects"
+          value={highRiskProjects}
+          change={-8.3}
+          icon={<AlertTriangle className="w-5 h-5" />}
+          color="pink"
+          loading={isLoading}
+        />
+        <MetricCardFuturistic
+          title="Total Budget"
+          value={`$${(totalBudget / 1000000).toFixed(1)}M`}
+          change={15.7}
+          icon={<DollarSign className="w-5 h-5" />}
+          color="purple"
+          loading={isLoading}
+        />
+        <MetricCardFuturistic
+          title="Team Members"
+          value={totalTeamMembers}
+          change={5.2}
+          icon={<Users className="w-5 h-5" />}
+          color="green"
+          loading={isLoading}
         />
       </div>
-    </div>
-  )
-}
-
-interface StatusItemProps {
-  icon: React.ReactNode
-  label: string
-  status: string
-  color: string
-}
-
-function StatusItem({ icon, label, status, color }: StatusItemProps) {
-  return (
-    <div className="flex items-center gap-3 p-3 bg-white/5 rounded-lg">
-      <div className={color}>{icon}</div>
+      
+      {/* Projects Grid */}
       <div>
-        <div className="text-gray-400 text-xs">{label}</div>
-        <div className="text-sm font-medium">{status}</div>
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-2xl font-bold text-white">Active Projects</h2>
+          <Link
+            href="/projects"
+            className="text-cyan-400 hover:text-cyan-300 transition-colors text-sm font-medium"
+          >
+            View All →
+          </Link>
+        </div>
+        
+        {projects && projects.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {projects.slice(0, 6).map((project: any) => (
+              <ProjectCardFuturistic
+                key={project.id}
+                project={project}
+                onClick={() => router.push(`/projects/${project.id}`)}
+              />
+            ))}
+          </div>
+        ) : (
+          <GlassCard>
+            <div className="text-center py-12">
+              <FolderKanban className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-lg font-semibold text-white mb-2">No Projects Found</h3>
+              <p className="text-gray-400 text-sm mb-4">Get started by creating your first project</p>
+              <ButtonFuturistic variant="primary" size="sm">
+                Create Project
+              </ButtonFuturistic>
+            </div>
+          </GlassCard>
+        )}
       </div>
+      
+      {/* Charts & Alerts */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div>
+          <RiskChart data={overview?.trending_risks || []} />
+        </div>
+        <div>
+          <AlertsList alerts={overview?.recent_anomalies || []} />
+        </div>
+      </div>
+      
+      {/* Recent Activity */}
+      <GlassCard hover={false}>
+        <h3 className="text-xl font-bold text-white mb-4">Recent Activity</h3>
+        <div className="space-y-3">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="flex items-center gap-4 p-3 rounded-lg hover:bg-white/5 transition-colors">
+              <div className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
+              <div className="flex-1">
+                <p className="text-white text-sm">Project {i} updated</p>
+                <p className="text-gray-400 text-xs">{i * 2} minutes ago</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </GlassCard>
     </div>
   )
 }
+
+const DashboardSkeleton = () => (
+  <div className="space-y-8 animate-pulse">
+    <div className="h-20 bg-white/5 rounded-2xl" />
+    <div className="grid grid-cols-4 gap-6">
+      {[1, 2, 3, 4].map((i) => (
+        <div key={i} className="h-32 bg-white/5 rounded-2xl" />
+      ))}
+    </div>
+    <div className="h-96 bg-white/5 rounded-2xl" />
+  </div>
+)
