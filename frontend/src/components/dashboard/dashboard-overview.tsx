@@ -85,35 +85,39 @@ export function DashboardOverview() {
   const stats = [
     {
       icon: Activity,
-      title: 'Active Projects',
-      value: overview?.total_projects || 0,
+      title: 'Total Projects',
+      value: overview?.summary?.total_projects || projects?.length || 0,
       change: '+12%',
       positive: true,
       color: 'from-blue-500 to-cyan-500',
+      description: 'Active projects in portfolio'
     },
     {
       icon: Users,
       title: 'Team Members',
-      value: overview?.total_employees || 0,
+      value: overview?.summary?.total_employees || 0,
       change: '+5%',
       positive: true,
-      color: 'from-blue-500 to-cyan-500',
+      color: 'from-purple-500 to-pink-500',
+      description: 'Active team members'
     },
     {
       icon: AlertTriangle,
-      title: 'High Risk Projects',
-      value: overview?.high_risk_projects || 0,
+      title: 'Anomalies Detected',
+      value: overview?.summary?.recent_anomalies || 0,
       change: '-3%',
-      positive: true,
+      positive: false,
       color: 'from-red-500 to-orange-500',
+      description: 'System anomalies detected'
     },
     {
-      icon: TrendingUp,
-      title: 'Avg Risk Score',
-      value: (overview?.avg_risk_score || 0).toFixed(1),
-      change: '-8%',
+      icon: Clock,
+      title: 'Activity Logs',
+      value: overview?.summary?.recent_activity_logs || 0,
+      change: '+15%',
       positive: true,
       color: 'from-green-500 to-emerald-500',
+      description: 'Recent activity entries'
     },
   ]
 
@@ -260,9 +264,10 @@ interface StatCardProps {
   change: string
   positive: boolean
   color: string
+  description?: string
 }
 
-function StatCard({ icon: Icon, title, value, change, positive, color }: StatCardProps) {
+function StatCard({ icon: Icon, title, value, change, positive, color, description }: StatCardProps) {
   return (
     <Card hover glow>
       <CardContent className="p-6">
@@ -276,7 +281,8 @@ function StatCard({ icon: Icon, title, value, change, positive, color }: StatCar
           </div>
         </div>
         <h3 className="text-gray-400 text-sm mb-1">{title}</h3>
-        <p className="text-3xl font-bold">{formatNumber(Number(value))}</p>
+        <p className="text-3xl font-bold mb-2">{formatNumber(Number(value))}</p>
+        {description && <p className="text-xs text-gray-500">{description}</p>}
       </CardContent>
     </Card>
   )

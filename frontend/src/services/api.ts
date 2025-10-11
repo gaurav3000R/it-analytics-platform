@@ -46,6 +46,14 @@ export const risksApi = {
     apiClient.get<{ project_id: string; risk_score: number; risk_factors: Record<string, unknown> }>(
       API_ENDPOINTS.RISKS_PREDICT(projectId)
     ),
+  getDashboard: () => apiClient.get<RiskDashboard>(API_ENDPOINTS.RISKS_DASHBOARD),
+  detectAnomalies: () => apiClient.post<any>(API_ENDPOINTS.RISKS_DETECT_ANOMALIES),
+  getAnomaliesByProject: (projectId: string) =>
+    apiClient.get<any>(API_ENDPOINTS.RISKS_ANOMALIES_PROJECT(projectId)),
+  getAnomaliesByEmployee: (employeeId: string) =>
+    apiClient.get<any>(API_ENDPOINTS.RISKS_ANOMALIES_EMPLOYEE(employeeId)),
+  getAnomaliesDashboard: () => apiClient.get<any>(API_ENDPOINTS.RISKS_ANOMALIES_DASHBOARD),
+  getAnomaliesList: () => apiClient.get<any>(API_ENDPOINTS.RISKS_ANOMALIES_LIST),
 }
 
 export const aiInsightsApi = {
@@ -57,6 +65,9 @@ export const aiInsightsApi = {
     apiClient.get<AIPortfolioTrends>(API_ENDPOINTS.AI_PORTFOLIO_TRENDS),
   getExecutiveSummary: () =>
     apiClient.get<AIExecutiveSummary>(API_ENDPOINTS.AI_EXECUTIVE_SUMMARY),
+  getProjectInsights: (projectId: string) =>
+    apiClient.get<any>(API_ENDPOINTS.AI_PROJECT_INSIGHTS(projectId)),
+  getDashboard: () => apiClient.get<any>(API_ENDPOINTS.AI_DASHBOARD),
 }
 
 export const bugTrackerApi = {
@@ -66,6 +77,7 @@ export const bugTrackerApi = {
     apiClient.get<{ total_bugs: number; projects_analyzed: number; summary: Record<string, unknown> }>(
       API_ENDPOINTS.BUG_PORTFOLIO_ANALYSIS
     ),
+  getDashboard: () => apiClient.get<any>(API_ENDPOINTS.BUG_DASHBOARD),
 }
 
 export const resourceApi = {
@@ -74,6 +86,13 @@ export const resourceApi = {
     apiClient.get<{ suggestions: RebalancingSuggestion[]; total_suggestions: number }>(
       API_ENDPOINTS.RESOURCE_REBALANCING
     ),
+  getEmployee: (employeeId: string) =>
+    apiClient.get<any>(API_ENDPOINTS.RESOURCE_EMPLOYEE(employeeId)),
+  getAlerts: () => apiClient.get<any>(API_ENDPOINTS.RESOURCE_ALERTS),
+  acknowledgeAlert: (alertId: string) =>
+    apiClient.post<any>(API_ENDPOINTS.RESOURCE_ALERT_ACKNOWLEDGE(alertId)),
+  getDashboard: () => apiClient.get<any>(API_ENDPOINTS.RESOURCE_DASHBOARD),
+  getOverbookingReport: () => apiClient.get<any>(API_ENDPOINTS.RESOURCE_OVERBOOKING_REPORT),
 }
 
 export const costApi = {
@@ -83,4 +102,17 @@ export const costApi = {
     apiClient.get<{ alerts: BudgetAlert[]; total_alerts: number }>(
       API_ENDPOINTS.COST_BUDGET_ALERTS
     ),
+  getPortfolioSummary: () => apiClient.get<any>(API_ENDPOINTS.COST_PORTFOLIO_SUMMARY),
+  getForecastHistory: (projectId: string) =>
+    apiClient.get<any>(API_ENDPOINTS.COST_FORECAST_HISTORY(projectId)),
+  getSpendingTrends: (projectId: string) =>
+    apiClient.get<any>(API_ENDPOINTS.COST_SPENDING_TRENDS(projectId)),
+}
+
+export const mlApi = {
+  getHealth: () => apiClient.get<any>(API_ENDPOINTS.ML_HEALTH),
+  getModelInfo: () => apiClient.get<any>(API_ENDPOINTS.ML_MODEL_INFO),
+  predict: (data: any) => apiClient.post<any>(API_ENDPOINTS.ML_PREDICT, data),
+  predictBatch: (data: any) => apiClient.post<any>(API_ENDPOINTS.ML_PREDICT_BATCH, data),
+  analyze: (data: any) => apiClient.post<any>(API_ENDPOINTS.ML_ANALYZE, data),
 }

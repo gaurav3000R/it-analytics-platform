@@ -6,7 +6,13 @@
     "build": "turbo build",
     "dev": "turbo dev",
     "test": "turbo test",
-    "clean": "turbo clean"
+    "clean": "turbo clean",
+    "kill": "pkill -f 'uvicorn' && pkill -f 'next dev' && echo '✅ All development servers stopped' || echo '✅ No servers running'",
+    "kill:backend": "pkill -f 'uvicorn' && echo '✅ Backend server stopped' || echo '✅ Backend not running'",
+    "kill:frontend": "pkill -f 'next dev' && echo '✅ Frontend server stopped' || echo '✅ Frontend not running'",
+    "kill:ports": "lsof -ti:8000 | xargs kill -9 2>/dev/null && lsof -ti:3000 | xargs kill -9 2>/dev/null && echo '✅ Ports 8000 and 3000 freed' || echo '✅ Ports already free'",
+    "status": "ps aux | grep -E '(uvicorn|next dev)' | grep -v grep || echo 'No servers running'",
+    "reset": "npm run kill && npm run kill:ports && echo '✅ All servers and ports cleared'"
   },
   "devDependencies": {
     "turbo": "latest"

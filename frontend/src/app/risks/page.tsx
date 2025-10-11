@@ -10,31 +10,68 @@ import { Badge } from '@/components/ui/badge'
 import {
   AlertTriangle,
   TrendingUp,
-  TrendingDown,
   Activity,
   Shield,
+  RefreshCw,
+  Target,
+  BarChart3,
   AlertCircle,
+  TrendingDown,
   CheckCircle,
 } from 'lucide-react'
-import { analyticsApi, risksApi } from '@/services/api'
+import { risksApi, projectsApi } from '@/services/api'
 import { QUERY_KEYS } from '@/lib/constants'
-import { getRiskLevel } from '@/lib/utils'
 import toast from 'react-hot-toast'
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
+import { 
+  BarChart, 
+  Bar, 
+  XAxis, 
+  YAxis, 
+  CartesianGrid, 
+  Tooltip, 
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+  LineChart,
+  Line,
+  Legend
+} from 'recharts'
 
 export default function RisksPage() {
-  const { data: riskDashboard, isLoading } = useQuery({
-    queryKey: QUERY_KEYS.RISK_DASHBOARD,
-    queryFn: analyticsApi.getRiskDashboard,
+  const { data: riskDashboard, isLoading, refetch } = useQuery({
+    queryKey: QUERY_KEYS.RISKS_DASHBOARD,
+    queryFn: risksApi.getDashboard,
+  })
+
+  const { data: projects } = useQuery({
+    queryKey: QUERY_KEYS.PROJECTS,
+    queryFn: projectsApi.getAll,
+  })
+
+  const { data: anomaliesList } = useQuery({
+    queryKey: QUERY_KEYS.RISKS_ANOMALIES_LIST,
+    queryFn: risksApi.getAnomaliesList,
   })
 
   const handleTrainModel = async () => {
     toast.promise(
-      risksApi.trainModel(),
+      risksApi.trainModel().then(() => refetch()),
       {
         loading: 'Training risk prediction model...',
-        success: (data) => `Model trained successfully! Accuracy: ${(data.accuracy * 100).toFixed(1)}%`,
+        success: (data: any) => `Model trained! R²: ${data?.metrics?.test_r2?.toFixed(3) || 'N/A'}`,
         error: 'Failed to train model',
+      }
+    )
+  }
+
+  const handleDetectAnomalies = async () => {
+    toast.promise(
+      risksApi.detectAnomalies().then(() => refetch()),
+      {
+        loading: 'Detecting anomalies...',
+        success: 'Anomaly detection complete!',
+        error: 'Failed to detect anomalies',
       }
     )
   }

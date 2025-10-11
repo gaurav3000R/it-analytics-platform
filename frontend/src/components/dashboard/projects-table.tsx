@@ -15,12 +15,12 @@ interface ProjectsTableProps {
 }
 
 export function ProjectsTable({ projects }: ProjectsTableProps) {
-  const [filter, setFilter] = React.useState<'all' | 'high' | 'medium' | 'low'>('all')
+  const [filter, setFilter] = React.useState<'all' | 'Critical' | 'High' | 'Medium' | 'Low'>('all')
 
   const filteredProjects = React.useMemo(() => {
     if (filter === 'all') return projects.slice(0, 10)
     return projects
-      .filter((p) => getRiskLevel(p.risk_score || 0) === filter)
+      .filter((p) => p.risk_level === filter)
       .slice(0, 10)
   }, [projects, filter])
 
@@ -28,9 +28,9 @@ export function ProjectsTable({ projects }: ProjectsTableProps) {
     <Card hover>
       <CardHeader>
         <div className="flex items-center justify-between">
-          <CardTitle>Project Risk Overview</CardTitle>
+          <CardTitle>Recent Projects</CardTitle>
           <div className="flex gap-2">
-            {['all', 'high', 'medium', 'low'].map((f) => (
+            {['all', 'Critical', 'High', 'Medium', 'Low'].map((f) => (
               <button
                 key={f}
                 onClick={() => setFilter(f as typeof filter)}
@@ -40,7 +40,7 @@ export function ProjectsTable({ projects }: ProjectsTableProps) {
                     : 'bg-white/[0.03] text-gray-400 hover:bg-white/[0.06]'
                 }`}
               >
-                {f.charAt(0).toUpperCase() + f.slice(1)}
+                {f}
               </button>
             ))}
           </div>
@@ -51,11 +51,11 @@ export function ProjectsTable({ projects }: ProjectsTableProps) {
           <table className="w-full">
             <thead>
               <tr className="border-b border-white/10">
-                <th className="text-left py-3 px-4 text-gray-400 font-semibold">Project</th>
-                <th className="text-left py-3 px-4 text-gray-400 font-semibold">Manager</th>
+                <th className="text-left py-3 px-4 text-gray-400 font-semibold">Project ID</th>
+                <th className="text-left py-3 px-4 text-gray-400 font-semibold">Type</th>
                 <th className="text-center py-3 px-4 text-gray-400 font-semibold">Team</th>
                 <th className="text-center py-3 px-4 text-gray-400 font-semibold">Budget</th>
-                <th className="text-center py-3 px-4 text-gray-400 font-semibold">Status</th>
+                <th className="text-center py-3 px-4 text-gray-400 font-semibold">Complexity</th>
                 <th className="text-center py-3 px-4 text-gray-400 font-semibold">Risk</th>
                 <th className="text-center py-3 px-4 text-gray-400 font-semibold">Actions</th>
               </tr>
@@ -70,34 +70,33 @@ export function ProjectsTable({ projects }: ProjectsTableProps) {
                   className="border-b border-white/5 hover:bg-white/5 transition-colors"
                 >
                   <td className="py-4 px-4">
-                    <div>
-                      <div className="font-medium">{project.name}</div>
-                      <div className="text-gray-400 text-sm truncate max-w-xs">
-                        {project.description || 'No description'}
-                      </div>
-                    </div>
+                    <div className="font-medium text-blue-400">{project.project_id}</div>
                   </td>
-                  <td className="py-4 px-4 text-gray-300">{project.project_manager || 'N/A'}</td>
+                  <td className="py-4 px-4">
+                    <Badge variant="secondary">{project.project_type}</Badge>
+                  </td>
                   <td className="py-4 px-4 text-center">
                     <span className="font-medium">{project.team_size || 0}</span>
                   </td>
                   <td className="py-4 px-4 text-center text-gray-300">
-                    ${((project.project_budget_usd || project.budget || 0) / 1000).toFixed(0)}k
+                    ${((project.budget_usd || 0) / 1000).toFixed(0)}k
                   </td>
                   <td className="py-4 px-4 text-center">
-                    <Badge
-                      variant={
-                        project.status === 'active' ? 'success' : 'secondary'
-                      }
-                    >
-                      {project.status || 'unknown'}
-                    </Badge>
+                    <div className="flex items-center justify-center gap-2">
+                      <div className="w-16 bg-gray-700 rounded-full h-2">
+                        <div
+                          className="bg-gradient-to-r from-blue-500 to-cyan-500 h-2 rounded-full"
+                          style={{ width: `${(project.complexity_score || 0) * 10}%` }}
+                        />
+                      </div>
+                      <span className="text-xs text-gray-400">{project.complexity_score?.toFixed(1)}</span>
+                    </div>
                   </td>
                   <td className="py-4 px-4 text-center">
-                    <RiskBadge score={project.risk_score || 0} />
+                    <RiskBadge level={project.risk_level} />
                   </td>
                   <td className="py-4 px-4 text-center">
-                    <Link href={`/projects/${project.id}`}>
+                    <Link href={`/projects/${project.project_id}`}>
                       <Button variant="ghost" size="sm">
                         <Eye className="h-4 w-4" />
                       </Button>
@@ -113,17 +112,17 @@ export function ProjectsTable({ projects }: ProjectsTableProps) {
   )
 }
 
-function RiskBadge({ score }: { score: number }) {
-  const level = getRiskLevel(score)
-  const variant = level === 'high' ? 'danger' : level === 'medium' ? 'warning' : 'success'
+function RiskBadge({ level }: { level: string }) {
+  const colors = {
+    Critical: 'bg-red-500/20 text-red-400 border-red-500/50',
+    High: 'bg-orange-500/20 text-orange-400 border-orange-500/50',
+    Medium: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/50',
+    Low: 'bg-green-500/20 text-green-400 border-green-500/50',
+  }
 
   return (
-    <div className="flex items-center justify-center gap-2">
-      <Badge variant={variant} className="font-bold">
-        {score.toFixed(0)}
-      </Badge>
-      {level === 'high' && <TrendingUp className="h-4 w-4 text-red-400" />}
-      {level === 'low' && <TrendingDown className="h-4 w-4 text-green-400" />}
-    </div>
+    <Badge className={`${colors[level as keyof typeof colors] || colors.Medium} border font-semibold`}>
+      {level}
+    </Badge>
   )
 }

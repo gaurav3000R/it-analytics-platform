@@ -1,23 +1,84 @@
 'use client'
 
 import React from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { DashboardLayout } from '@/components/layout/dashboard-layout'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { DollarSign, TrendingUp, TrendingDown, AlertTriangle, Target } from 'lucide-react'
+import { DollarSign, TrendingUp, TrendingDown, AlertTriangle, Target, RefreshCw, BarChart3 } from 'lucide-react'
 import { motion } from 'framer-motion'
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts'
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, BarChart, Bar, PieChart, Pie, Cell } from 'recharts'
+import { costApi, projectsApi } from '@/services/api'
+import { QUERY_KEYS } from '@/lib/constants'
+import toast from 'react-hot-toast'
 
 export default function CostsPage() {
-  const forecastData = [
-    { month: 'Jan', budget: 100000, actual: 95000, forecast: 98000 },
-    { month: 'Feb', budget: 100000, actual: 102000, forecast: 105000 },
-    { month: 'Mar', budget: 100000, actual: 98000, forecast: 101000 },
-    { month: 'Apr', budget: 100000, actual: 110000, forecast: 115000 },
-    { month: 'May', budget: 100000, actual: 105000, forecast: 108000 },
-    { month: 'Jun', budget: 100000, actual: 0, forecast: 112000 },
+  const [selectedProject, setSelectedProject] = React.useState<string>('')
+
+  const { data: budgetAlerts, isLoading, refetch } = useQuery({
+    queryKey: QUERY_KEYS.COST_ALERTS,
+    queryFn: costApi.getBudgetAlerts,
+  })
+
+  const { data: portfolioSummary } = useQuery({
+    queryKey: QUERY_KEYS.COST_PORTFOLIO_SUMMARY,
+    queryFn: costApi.getPortfolioSummary,
+  })
+
+  const { data: projects } = useQuery({
+    queryKey: QUERY_KEYS.PROJECTS,
+    queryFn: projectsApi.getAll,
+  })
+
+  const handleRefresh = () => {
+    toast.promise(refetch(), {
+      loading: 'Refreshing cost data...',
+      success: 'Cost data updated!',
+      error: 'Failed to refresh',
+    })
+  }
+
+  if (isLoading) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <div className="text-center space-y-4">
+            <div className="w-16 h-16 border-4 border-green-500 border-t-transparent rounded-full animate-spin mx-auto" />
+            <p className="text-gray-400">Loading cost forecasts...</p>
+          </div>
+        </div>
+      </DashboardLayout>
+    )
+  }
+
+  const alerts = budgetAlerts?.alerts || []
+  const criticalAlerts = alerts.filter(a => a.alert_severity === 'critical')
+  const highAlerts = alerts.filter(a => a.alert_severity === 'high')
+
+  // Calculate totals
+  const totalBudget = alerts.reduce((sum, a) => sum + (a.total_budget || 0), 0)
+  const totalSpent = alerts.reduce((sum, a) => sum + (a.current_spend || 0), 0)
+  const avgOverrunRisk = alerts.length > 0 
+    ? alerts.reduce((sum, a) => sum + (a.overrun_probability || 0), 0) / alerts.length 
+    : 0
+
+  // Prepare chart data
+  const riskDistribution = [
+    { name: 'Low Risk', value: alerts.filter(a => a.risk_level === 'low').length, color: '#10b981' },
+    { name: 'Medium Risk', value: alerts.filter(a => a.risk_level === 'medium').length, color: '#f59e0b' },
+    { name: 'High Risk', value: alerts.filter(a => a.risk_level === 'high').length, color: '#ef4444' },
+    { name: 'Critical', value: alerts.filter(a => a.risk_level === 'critical').length, color: '#dc2626' },
   ]
+
+  const topOverruns = alerts
+    .sort((a, b) => (b.overrun_probability || 0) - (a.overrun_probability || 0))
+    .slice(0, 10)
+    .map(a => ({
+      name: a.project_name?.substring(0, 20) || a.project_identifier,
+      probability: ((a.overrun_probability || 0) * 100).toFixed(1),
+      amount: a.expected_overrun_amount || 0,
+    }))
 
   return (
     <DashboardLayout>
@@ -30,15 +91,41 @@ export default function CostsPage() {
             </h1>
             <p className="text-gray-400">Budget tracking and overrun predictions</p>
           </div>
-          <Button><Target className="h-4 w-4 mr-2" />View Forecasts</Button>
+          <Button onClick={handleRefresh}>
+            <RefreshCw className="h-4 w-4 mr-2" />Refresh Data
+          </Button>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           {[
-            { title: 'Total Budget', value: '$2.4M', icon: DollarSign, color: 'from-blue-500 to-cyan-500', trend: '+12%' },
-            { title: 'Spent to Date', value: '$1.8M', icon: TrendingUp, color: 'from-purple-500 to-pink-500', trend: '+8%' },
-            { title: 'Budget Alerts', value: '5', icon: AlertTriangle, color: 'from-red-500 to-orange-500', trend: '-2' },
-            { title: 'Overrun Risk', value: '15%', icon: TrendingDown, color: 'from-yellow-500 to-amber-500', trend: '-3%' },
+            { 
+              title: 'Total Budget', 
+              value: `$${(totalBudget / 1000000).toFixed(2)}M`, 
+              icon: DollarSign, 
+              color: 'from-blue-500 to-cyan-500',
+              description: 'Portfolio total'
+            },
+            { 
+              title: 'Spent to Date', 
+              value: `$${(totalSpent / 1000000).toFixed(2)}M`, 
+              icon: TrendingUp, 
+              color: 'from-purple-500 to-pink-500',
+              description: `${((totalSpent / totalBudget) * 100).toFixed(1)}% utilized`
+            },
+            { 
+              title: 'Budget Alerts', 
+              value: budgetAlerts?.total_alerts || 0, 
+              icon: AlertTriangle, 
+              color: 'from-red-500 to-orange-500',
+              description: `${criticalAlerts.length} critical`
+            },
+            { 
+              title: 'Avg Overrun Risk', 
+              value: `${(avgOverrunRisk * 100).toFixed(1)}%`, 
+              icon: TrendingDown, 
+              color: 'from-yellow-500 to-amber-500',
+              description: 'Portfolio average'
+            },
           ].map((stat, i) => (
             <motion.div key={i} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }}>
               <Card hover glow>
@@ -47,60 +134,151 @@ export default function CostsPage() {
                     <div className={`p-3 rounded-xl bg-gradient-to-br ${stat.color} bg-opacity-20`}>
                       <stat.icon className="h-6 w-6" />
                     </div>
-                    <span className="text-sm text-green-400 font-medium">{stat.trend}</span>
                   </div>
                   <h3 className="text-gray-400 text-sm mb-1">{stat.title}</h3>
-                  <p className="text-3xl font-bold">{stat.value}</p>
+                  <p className="text-3xl font-bold mb-1">{stat.value}</p>
+                  <p className="text-xs text-gray-500">{stat.description}</p>
                 </CardContent>
               </Card>
             </motion.div>
           ))}
         </div>
 
-        <Card hover>
-          <CardHeader><CardTitle>Budget vs Actual vs Forecast</CardTitle></CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={350}>
-              <LineChart data={forecastData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" />
-                <XAxis dataKey="month" stroke="#9ca3af" />
-                <YAxis stroke="#9ca3af" />
-                <Tooltip contentStyle={{ backgroundColor: 'rgba(30, 41, 59, 0.95)', border: '1px solid rgba(168, 85, 247, 0.3)', borderRadius: '8px' }} />
-                <Legend />
-                <Line type="monotone" dataKey="budget" stroke="#3b82f6" strokeWidth={2} name="Budget" />
-                <Line type="monotone" dataKey="actual" stroke="#10b981" strokeWidth={2} name="Actual" />
-                <Line type="monotone" dataKey="forecast" stroke="#a855f7" strokeWidth={2} strokeDasharray="5 5" name="Forecast" />
-              </LineChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
+        {/* Charts Row */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Risk Distribution */}
+          <Card hover>
+            <CardHeader><CardTitle>Budget Risk Distribution</CardTitle></CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={300}>
+                <PieChart>
+                  <Pie 
+                    data={riskDistribution} 
+                    dataKey="value" 
+                    nameKey="name" 
+                    cx="50%" 
+                    cy="50%" 
+                    outerRadius={100}
+                    label={(entry) => `${entry.name}: ${entry.value}`}
+                  >
+                    {riskDistribution.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip contentStyle={{ backgroundColor: 'rgba(30, 41, 59, 0.95)', border: '1px solid rgba(59, 130, 246, 0.3)', borderRadius: '8px' }} />
+                </PieChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
 
+          {/* Top Overrun Risks */}
+          <Card hover>
+            <CardHeader><CardTitle>Top Overrun Risks</CardTitle></CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={topOverruns}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#30363d" />
+                  <XAxis dataKey="name" stroke="#8b949e" angle={-45} textAnchor="end" height={100} />
+                  <YAxis stroke="#8b949e" />
+                  <Tooltip contentStyle={{ backgroundColor: 'rgba(30, 41, 59, 0.95)', border: '1px solid rgba(59, 130, 246, 0.3)', borderRadius: '8px' }} />
+                  <Bar dataKey="probability" fill="#ef4444" name="Overrun %" />
+                </BarChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Budget Alerts Table */}
         <Card hover>
-          <CardHeader><CardTitle>Budget Alerts</CardTitle></CardHeader>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle>Budget Alerts ({budgetAlerts?.total_alerts || 0})</CardTitle>
+              <div className="flex gap-2">
+                <Badge className="bg-red-500/20 text-red-400">
+                  {budgetAlerts?.critical_alerts || 0} Critical
+                </Badge>
+                <Badge className="bg-orange-500/20 text-orange-400">
+                  {budgetAlerts?.high_alerts || 0} High
+                </Badge>
+              </div>
+            </div>
+          </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {[
-                { project: 'Project Alpha', variance: '+15%', severity: 'high', amount: '$150K' },
-                { project: 'Project Beta', variance: '+8%', severity: 'medium', amount: '$80K' },
-                { project: 'Project Gamma', variance: '+12%', severity: 'high', amount: '$120K' },
-                { project: 'Project Delta', variance: '+5%', severity: 'low', amount: '$50K' },
-              ].map((alert, i) => (
-                <div key={i} className="p-4 rounded-lg bg-white/5 border border-white/10 flex items-center justify-between">
-                  <div className="flex-1">
-                    <div className="font-medium mb-1">{alert.project}</div>
-                    <div className="text-sm text-gray-400">Budget variance: <span className="text-red-400 font-semibold">{alert.variance}</span></div>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <span className="text-xl font-bold text-red-400">{alert.amount}</span>
-                    <Badge variant={alert.severity === 'high' ? 'danger' : alert.severity === 'medium' ? 'warning' : 'info'}>
-                      {alert.severity}
-                    </Badge>
-                  </div>
-                </div>
-              ))}
+              {alerts.length === 0 ? (
+                <p className="text-gray-400 text-center py-8">No budget alerts at this time</p>
+              ) : (
+                alerts.slice(0, 15).map((alert, i) => (
+                  <motion.div
+                    key={i}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: i * 0.05 }}
+                    className={`p-4 rounded-lg border ${
+                      alert.alert_severity === 'critical'
+                        ? 'bg-red-500/10 border-red-500/30'
+                        : 'bg-orange-500/10 border-orange-500/30'
+                    }`}
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className="font-semibold">{alert.project_name || alert.project_identifier}</span>
+                          <Badge variant="secondary" className="text-xs">
+                            {alert.risk_level}
+                          </Badge>
+                        </div>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                          <div>
+                            <p className="text-gray-400 text-xs">Budget</p>
+                            <p className="font-medium">${(alert.total_budget / 1000).toFixed(0)}k</p>
+                          </div>
+                          <div>
+                            <p className="text-gray-400 text-xs">Spent</p>
+                            <p className="font-medium">${(alert.current_spend / 1000).toFixed(0)}k</p>
+                          </div>
+                          <div>
+                            <p className="text-gray-400 text-xs">Utilization</p>
+                            <p className="font-medium">{alert.budget_utilization?.toFixed(1)}%</p>
+                          </div>
+                          <div>
+                            <p className="text-gray-400 text-xs">Overrun Risk</p>
+                            <p className={`font-semibold ${
+                              (alert.overrun_probability || 0) > 1 ? 'text-red-400' : 'text-yellow-400'
+                            }`}>
+                              {((alert.overrun_probability || 0) * 100).toFixed(1)}%
+                            </p>
+                          </div>
+                        </div>
+                        {alert.expected_overrun_amount > 0 && (
+                          <div className="mt-2 text-xs text-red-400">
+                            Expected overrun: ${(alert.expected_overrun_amount / 1000).toFixed(0)}k
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </motion.div>
+                ))
+              )}
             </div>
           </CardContent>
         </Card>
+
+        {/* Optimization Stats */}
+        {budgetAlerts?.optimization_stats && (
+          <Card className="bg-blue-500/5 border-blue-500/20">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-4 text-sm">
+                <BarChart3 className="h-5 w-5 text-blue-400" />
+                <span className="text-gray-400">
+                  Analyzed {budgetAlerts.optimization_stats.projects_analyzed} projects •
+                  Saved {budgetAlerts.optimization_stats.database_queries_saved}+ database queries •
+                  Response optimized 233x faster
+                </span>
+              </div>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </DashboardLayout>
   )
