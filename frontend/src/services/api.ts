@@ -23,10 +23,10 @@ import type {
 // - /api/v1/analytics/risk-dashboard
 // - /api/v1/cost-forecasting/portfolio-summary
 // - /api/v1/cost-forecasting/budget-alerts
-import { 
-  mockRiskDashboard, 
-  mockCostPortfolioSummary, 
-  mockBudgetAlerts 
+import {
+  mockRiskDashboard,
+  mockCostPortfolioSummary,
+  mockBudgetAlerts
 } from './mock-data'
 // ========================================================================
 
@@ -52,14 +52,7 @@ export const projectsApi = {
 
 export const analyticsApi = {
   getOverview: () => apiClient.get<AnalyticsOverview>(API_ENDPOINTS.ANALYTICS_OVERVIEW),
-  
-  // ========================================================================
-  // TEMPORARY FIX: Using mock data due to backend error
-  // TODO: Uncomment the line below once backend API is fixed
-  // getRiskDashboard: () => apiClient.get<RiskDashboard>(API_ENDPOINTS.RISK_DASHBOARD),
-  // ========================================================================
-  getRiskDashboard: () => mockRiskDashboard() as Promise<RiskDashboard>,
-  // ========================================================================
+  getRiskDashboard: () => apiClient.get<RiskDashboard>(API_ENDPOINTS.RISK_DASHBOARD),
 }
 
 export const risksApi = {
@@ -120,20 +113,12 @@ export const resourceApi = {
 export const costApi = {
   getForecast: (projectId: string) =>
     apiClient.get<CostForecast>(API_ENDPOINTS.COST_FORECAST(projectId)),
-  
-  // ========================================================================
-  // TEMPORARY FIX: Using mock data due to backend error
-  // TODO: Uncomment the lines below once backend APIs are fixed
-  // getBudgetAlerts: () =>
-  //   apiClient.get<{ alerts: BudgetAlert[]; total_alerts: number }>(
-  //     API_ENDPOINTS.COST_BUDGET_ALERTS
-  //   ),
-  // getPortfolioSummary: () => apiClient.get<any>(API_ENDPOINTS.COST_PORTFOLIO_SUMMARY),
-  // ========================================================================
-  getBudgetAlerts: () => mockBudgetAlerts() as Promise<{ alerts: BudgetAlert[]; total_alerts: number }>,
-  getPortfolioSummary: () => mockCostPortfolioSummary(),
-  // ========================================================================
-  
+
+  getBudgetAlerts: () =>
+    apiClient.get<{ alerts: BudgetAlert[]; total_alerts: number }>(
+      API_ENDPOINTS.COST_BUDGET_ALERTS
+    ),
+  getPortfolioSummary: () => apiClient.get<any>(API_ENDPOINTS.COST_PORTFOLIO_SUMMARY),
   getForecastHistory: (projectId: string) =>
     apiClient.get<any>(API_ENDPOINTS.COST_FORECAST_HISTORY(projectId)),
   getSpendingTrends: (projectId: string) =>
