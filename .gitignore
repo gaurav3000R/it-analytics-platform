@@ -16,6 +16,9 @@ Thumbs.db
 *.swo
 *~
 
+# Folders starting with underscore
+_*/
+
 # IDEs
 .idea/
 .vscode/
